@@ -25,6 +25,20 @@ import { formatTimeAgo } from "~lib/utils"
 
 import "./options.css"
 
+// --- Drag handle SVG ---
+function DragHandleIcon() {
+  return (
+    <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
+      <circle cx="2" cy="2" r="1.5" />
+      <circle cx="8" cy="2" r="1.5" />
+      <circle cx="2" cy="7" r="1.5" />
+      <circle cx="8" cy="7" r="1.5" />
+      <circle cx="2" cy="12" r="1.5" />
+      <circle cx="8" cy="12" r="1.5" />
+    </svg>
+  )
+}
+
 // --- Sortable item components ---
 
 function SortableOrgItem({
@@ -38,31 +52,18 @@ function SortableOrgItem({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: org.id })
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 10 : undefined
   }
-
   return (
     <div ref={setNodeRef} style={style} className="sortable-item sortable-org">
-      <button className="drag-handle" {...attributes} {...listeners} title="Drag to reorder">
-        <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
-          <circle cx="2" cy="2" r="1.5" />
-          <circle cx="8" cy="2" r="1.5" />
-          <circle cx="2" cy="7" r="1.5" />
-          <circle cx="8" cy="7" r="1.5" />
-          <circle cx="2" cy="12" r="1.5" />
-          <circle cx="8" cy="12" r="1.5" />
-        </svg>
-      </button>
+      <button className="drag-handle" {...attributes} {...listeners}><DragHandleIcon /></button>
       <span className={`sortable-name ${isHidden ? "is-dimmed" : ""}`}>{org.name}</span>
       <span className="sortable-meta">org</span>
-      <button
-        className={`toggle-pill ${isHidden ? "is-off" : "is-on"}`}
-        onClick={onToggleVisibility}>
+      <button className={`toggle-pill ${isHidden ? "is-off" : "is-on"}`} onClick={onToggleVisibility}>
         {isHidden ? "Hidden" : "Visible"}
       </button>
     </div>
@@ -70,14 +71,8 @@ function SortableOrgItem({
 }
 
 function SortableProjectItem({
-  project,
-  orgName,
-  isHidden,
-  hasOverride,
-  isOverrideExpanded,
-  onToggleVisibility,
-  onToggleOverrideExpand,
-  overrideContent
+  project, orgName, isHidden, hasOverride, isOverrideExpanded,
+  onToggleVisibility, onToggleOverrideExpand, overrideContent
 }: {
   project: { id: number; name: string }
   orgName: string
@@ -90,55 +85,35 @@ function SortableProjectItem({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: `project-${project.id}` })
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 10 : undefined
   }
-
   return (
     <div ref={setNodeRef} style={style} className="sortable-item-wrap">
       <div className="sortable-item sortable-project">
-        <button className="drag-handle" {...attributes} {...listeners} title="Drag to reorder">
-          <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
-            <circle cx="2" cy="2" r="1.5" />
-            <circle cx="8" cy="2" r="1.5" />
-            <circle cx="2" cy="7" r="1.5" />
-            <circle cx="8" cy="7" r="1.5" />
-            <circle cx="2" cy="12" r="1.5" />
-            <circle cx="8" cy="12" r="1.5" />
-          </svg>
-        </button>
+        <button className="drag-handle" {...attributes} {...listeners}><DragHandleIcon /></button>
         <span className={`sortable-name ${isHidden ? "is-dimmed" : ""}`}>{project.name}</span>
         <span className="sortable-meta">{orgName}</span>
         {hasOverride && <span className="override-dot" title="Custom tool config" />}
-        <button
-          className="tools-config-btn"
-          onClick={onToggleOverrideExpand}
-          title="Configure tools">
+        <button className="tools-config-btn" onClick={onToggleOverrideExpand} title="Configure tools">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M6.5 1.5h3v2.3a5 5 0 0 1 1.7 1l2-1.1 1.5 2.6-2 1.1a5 5 0 0 1 0 2l2 1.1-1.5 2.6-2-1.1a5 5 0 0 1-1.7 1v2.3h-3v-2.3a5 5 0 0 1-1.7-1l-2 1.1-1.5-2.6 2-1.1a5 5 0 0 1 0-2l-2-1.1 1.5-2.6 2 1.1a5 5 0 0 1 1.7-1z" />
             <circle cx="8" cy="8" r="2" />
           </svg>
         </button>
-        <button
-          className={`toggle-pill ${isHidden ? "is-off" : "is-on"}`}
-          onClick={onToggleVisibility}>
+        <button className={`toggle-pill ${isHidden ? "is-off" : "is-on"}`} onClick={onToggleVisibility}>
           {isHidden ? "Hidden" : "Visible"}
         </button>
       </div>
-      {isOverrideExpanded && (
-        <div className="override-panel">
-          {overrideContent}
-        </div>
-      )}
+      {isOverrideExpanded && <div className="override-panel">{overrideContent}</div>}
     </div>
   )
 }
 
-// --- Main Options component ---
+// --- Main ---
 
 function Options() {
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -146,12 +121,10 @@ function Options() {
   const [lastRefreshed, setLastRefreshed] = useState<number | null>(null)
   const [expandedProjectOverride, setExpandedProjectOverride] = useState<number | null>(null)
   const [showApiKey, setShowApiKey] = useState(false)
-  const [testStatus, setTestStatus] = useState<{
-    type: "success" | "error"
-    message: string
-  } | null>(null)
+  const [testStatus, setTestStatus] = useState<{ type: "success" | "error"; message: string } | null>(null)
   const [testing, setTesting] = useState(false)
   const [permissionGranted, setPermissionGranted] = useState(false)
+  const [activeSection, setActiveSection] = useState("connection")
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const sensors = useSensors(
@@ -168,13 +141,9 @@ function Options() {
       setLastRefreshed(cache?.lastRefreshed ?? null)
       if (s.instanceUrl && !s.instanceUrl.includes("posthog.com")) {
         try {
-          const granted = await chrome.permissions.contains({
-            origins: [`${s.instanceUrl.replace(/\/$/, "")}/*`]
-          })
+          const granted = await chrome.permissions.contains({ origins: [`${s.instanceUrl.replace(/\/$/, "")}/*`] })
           setPermissionGranted(granted)
-        } catch {
-          // ignore
-        }
+        } catch { /* ignore */ }
       }
     }
     load()
@@ -185,9 +154,7 @@ function Options() {
       if (!settings) return
       setSettings({ ...settings, [key]: value })
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = setTimeout(async () => {
-        await saveSettings({ [key]: value })
-      }, 500)
+      saveTimerRef.current = setTimeout(() => { saveSettings({ [key]: value }) }, 500)
     },
     [settings]
   )
@@ -204,16 +171,10 @@ function Options() {
   const handleGrantAccess = useCallback(async () => {
     if (!settings) return
     try {
-      const granted = await chrome.permissions.request({
-        origins: [`${settings.instanceUrl.replace(/\/$/, "")}/*`]
-      })
+      const granted = await chrome.permissions.request({ origins: [`${settings.instanceUrl.replace(/\/$/, "")}/*`] })
       setPermissionGranted(granted)
-      if (!granted) {
-        setTestStatus({ type: "error", message: "Permission denied by user" })
-      }
-    } catch {
-      setTestStatus({ type: "error", message: "Failed to request permission" })
-    }
+      if (!granted) setTestStatus({ type: "error", message: "Permission denied" })
+    } catch { setTestStatus({ type: "error", message: "Failed to request permission" }) }
   }, [settings])
 
   const handleTestConnection = useCallback(async () => {
@@ -221,353 +182,278 @@ function Options() {
     setTesting(true)
     setTestStatus(null)
     const result = await testConnection(settings.instanceUrl, settings.apiKey)
-    setTestStatus(
-      result.success
-        ? { type: "success", message: `Connected! ${result.orgCount} org${result.orgCount === 1 ? "" : "s"} found.` }
-        : { type: "error", message: result.error ?? "Connection failed" }
-    )
+    setTestStatus(result.success
+      ? { type: "success", message: `Connected! ${result.orgCount} org${result.orgCount === 1 ? "" : "s"} found.` }
+      : { type: "error", message: result.error ?? "Connection failed" })
     setTesting(false)
   }, [settings])
 
   const handleRefreshNow = useCallback(async () => {
     if (!settings?.apiKey) return
     chrome.runtime.sendMessage({ type: "refresh" }, () => {
-      if (chrome.runtime.lastError) {
-        console.warn("Refresh message failed:", chrome.runtime.lastError.message)
-      }
+      if (chrome.runtime.lastError) console.warn("Refresh failed:", chrome.runtime.lastError.message)
       getCachedData().then((cache) => setLastRefreshed(cache?.lastRefreshed ?? null))
     })
   }, [settings])
 
-  const handleToggleTool = useCallback(
-    async (toolId: string) => {
-      if (!settings) return
-      const newTools = settings.visibleTools.includes(toolId)
-        ? settings.visibleTools.filter((id) => id !== toolId)
-        : [...settings.visibleTools, toolId]
-      await updateSetting("visibleTools", newTools)
-    },
-    [settings, updateSetting]
-  )
+  const handleToggleTool = useCallback(async (toolId: string) => {
+    if (!settings) return
+    const newTools = settings.visibleTools.includes(toolId)
+      ? settings.visibleTools.filter((id) => id !== toolId)
+      : [...settings.visibleTools, toolId]
+    await updateSetting("visibleTools", newTools)
+  }, [settings, updateSetting])
 
-  const handleToggleProjectTool = useCallback(
-    async (projectId: number, toolId: string) => {
-      if (!settings) return
-      const overrides = { ...settings.projectToolOverrides }
-      const current = overrides[projectId] ?? [...settings.visibleTools]
-      overrides[projectId] = current.includes(toolId)
-        ? current.filter((id) => id !== toolId)
-        : [...current, toolId]
-      await updateSetting("projectToolOverrides", overrides)
-    },
-    [settings, updateSetting]
-  )
+  const handleToggleProjectTool = useCallback(async (projectId: number, toolId: string) => {
+    if (!settings) return
+    const overrides = { ...settings.projectToolOverrides }
+    const current = overrides[projectId] ?? [...settings.visibleTools]
+    overrides[projectId] = current.includes(toolId) ? current.filter((id) => id !== toolId) : [...current, toolId]
+    await updateSetting("projectToolOverrides", overrides)
+  }, [settings, updateSetting])
 
-  const handleResetProjectOverride = useCallback(
-    async (projectId: number) => {
-      if (!settings) return
-      const overrides = { ...settings.projectToolOverrides }
-      delete overrides[projectId]
-      await updateSetting("projectToolOverrides", overrides)
-    },
-    [settings, updateSetting]
-  )
+  const handleResetProjectOverride = useCallback(async (projectId: number) => {
+    if (!settings) return
+    const overrides = { ...settings.projectToolOverrides }
+    delete overrides[projectId]
+    await updateSetting("projectToolOverrides", overrides)
+  }, [settings, updateSetting])
 
-  // Sorted orgs for the list
   const sortedOrgs = useMemo(() => {
     if (!cachedData || !settings) return []
-    const orgs = [...cachedData.organizations]
-    orgs.sort((a, b) => {
-      const ai = settings.orgOrder.indexOf(a.id)
-      const bi = settings.orgOrder.indexOf(b.id)
+    return [...cachedData.organizations].sort((a, b) => {
+      const ai = settings.orgOrder.indexOf(a.id), bi = settings.orgOrder.indexOf(b.id)
       if (ai === -1 && bi === -1) return a.name.localeCompare(b.name)
-      if (ai === -1) return 1
-      if (bi === -1) return -1
+      if (ai === -1) return 1; if (bi === -1) return -1
       return ai - bi
     })
-    return orgs
   }, [cachedData, settings])
 
-  // Sorted projects (flat, across all orgs)
   const sortedProjects = useMemo(() => {
     if (!cachedData || !settings) return []
     const projects = cachedData.organizations.flatMap((org) =>
       org.projects.map((p) => ({ ...p, orgName: org.name, orgId: org.id }))
     )
-    projects.sort((a, b) => {
-      const ai = settings.projectOrder.indexOf(a.id)
-      const bi = settings.projectOrder.indexOf(b.id)
+    return projects.sort((a, b) => {
+      const ai = settings.projectOrder.indexOf(a.id), bi = settings.projectOrder.indexOf(b.id)
       if (ai === -1 && bi === -1) return a.name.localeCompare(b.name)
-      if (ai === -1) return 1
-      if (bi === -1) return -1
+      if (ai === -1) return 1; if (bi === -1) return -1
       return ai - bi
     })
-    return projects
   }, [cachedData, settings])
 
-  const handleOrgDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      if (!settings) return
-      const { active, over } = event
-      if (!over || active.id === over.id) return
-      const ids = sortedOrgs.map((o) => o.id)
-      const oldIndex = ids.indexOf(active.id as string)
-      const newIndex = ids.indexOf(over.id as string)
-      if (oldIndex !== -1 && newIndex !== -1) {
-        updateSetting("orgOrder", arrayMove(ids, oldIndex, newIndex))
-      }
-    },
-    [settings, sortedOrgs, updateSetting]
-  )
+  const handleOrgDragEnd = useCallback((event: DragEndEvent) => {
+    if (!settings) return
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const ids = sortedOrgs.map((o) => o.id)
+    const oi = ids.indexOf(active.id as string), ni = ids.indexOf(over.id as string)
+    if (oi !== -1 && ni !== -1) updateSetting("orgOrder", arrayMove(ids, oi, ni))
+  }, [settings, sortedOrgs, updateSetting])
 
-  const handleProjectDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      if (!settings) return
-      const { active, over } = event
-      if (!over || active.id === over.id) return
-      const ids = sortedProjects.map((p) => `project-${p.id}`)
-      const oldIndex = ids.indexOf(active.id as string)
-      const newIndex = ids.indexOf(over.id as string)
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const projectIds = sortedProjects.map((p) => p.id)
-        updateSetting("projectOrder", arrayMove(projectIds, oldIndex, newIndex))
-      }
-    },
-    [settings, sortedProjects, updateSetting]
-  )
+  const handleProjectDragEnd = useCallback((event: DragEndEvent) => {
+    if (!settings) return
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const ids = sortedProjects.map((p) => `project-${p.id}`)
+    const oi = ids.indexOf(active.id as string), ni = ids.indexOf(over.id as string)
+    if (oi !== -1 && ni !== -1) updateSetting("projectOrder", arrayMove(sortedProjects.map((p) => p.id), oi, ni))
+  }, [settings, sortedProjects, updateSetting])
 
   if (!settings) return null
 
-  const isCustomUrl =
-    settings.instanceUrl.length > 0 && !settings.instanceUrl.includes("posthog.com")
+  const isCustomUrl = settings.instanceUrl.length > 0 && !settings.instanceUrl.includes("posthog.com")
+
+  const navItems = [
+    { id: "connection", label: "Connection", icon: "🔗" },
+    { id: "tools", label: "Tools", icon: "🧰" },
+    { id: "projects", label: "Projects", icon: "📁" },
+    { id: "cache", label: "Cache", icon: "🔄" }
+  ]
 
   return (
     <div className="options-root">
-      {/* Header */}
-      <header className="options-header">
-        <div className="options-header-logo">
-          <svg width="20" height="20" viewBox="0 0 128 128" fill="none">
-            <path d="M64 128C99.3462 128 128 99.3462 128 64C128 28.6538 99.3462 0 64 0C28.6538 0 0 28.6538 0 64C0 99.3462 28.6538 128 64 128Z" fill="#F54E00" />
-            <path d="M42 42h44v44H42z" fill="white" />
-          </svg>
-        </div>
-        <div>
-          <h1 className="options-header-title">PostHog Explorer</h1>
-          <p className="options-header-sub">Extension settings</p>
-        </div>
-      </header>
-
-      {/* Connection */}
-      <section className="card">
-        <h2 className="card-title">Connection</h2>
-        <div className="field">
-          <label className="field-label">Instance URL</label>
-          <input
-            className="field-input"
-            type="text"
-            value={settings.instanceUrl}
-            onChange={(e) => updateSettingDebounced("instanceUrl", e.target.value)}
-            placeholder="https://us.posthog.com"
-          />
-        </div>
-        <div className="field">
-          <label className="field-label">Personal API Key</label>
-          <div className="field-input-wrap">
-            <input
-              className="field-input"
-              type={showApiKey ? "text" : "password"}
-              value={settings.apiKey}
-              onChange={(e) => updateSettingDebounced("apiKey", e.target.value)}
-              placeholder="phx_..."
-            />
-            <button
-              className="field-input-action"
-              onClick={() => setShowApiKey(!showApiKey)}
-              type="button">
-              {showApiKey ? "Hide" : "Show"}
-            </button>
+      <aside className="sidebar">
+        <div className="sidebar-header">
+          <div className="sidebar-logo">
+            <svg width="20" height="20" viewBox="0 0 128 128" fill="none">
+              <path d="M64 128C99.3462 128 128 99.3462 128 64C128 28.6538 99.3462 0 64 0C28.6538 0 0 28.6538 0 64C0 99.3462 28.6538 128 64 128Z" fill="#F54E00" />
+              <path d="M42 42h44v44H42z" fill="white" />
+            </svg>
           </div>
-          <p className="field-hint">
-            <a
-              href={`${settings.instanceUrl.replace(/\/$/, "")}/settings/user-api-keys`}
-              target="_blank"
-              rel="noopener noreferrer">
-              Create a key
-            </a>
-            {" "}&mdash; use <strong>All access</strong> preset, or at minimum: organization:read, dashboard:read, project:read
-          </p>
+          <div>
+            <div className="sidebar-title">PostHog Explorer</div>
+            <div className="sidebar-sub">Settings</div>
+          </div>
         </div>
-        <div className="card-actions">
-          {isCustomUrl && !permissionGranted && (
-            <button className="btn btn-outline" onClick={handleGrantAccess}>
-              Grant Access
-            </button>
-          )}
-          <button className="btn btn-primary" onClick={handleTestConnection} disabled={testing}>
-            {testing ? "Testing..." : "Test Connection"}
-          </button>
-          {testStatus && (
-            <span className={`status-badge ${testStatus.type}`}>
-              {testStatus.message}
-            </span>
-          )}
-        </div>
-        {isCustomUrl && (
-          <p className="field-hint">Self-hosted URL &mdash; click "Grant Access" first.</p>
-        )}
-      </section>
-
-      {/* Visible Tools */}
-      <section className="card">
-        <h2 className="card-title">Default tools</h2>
-        <p className="card-desc">Choose which tools appear for all projects by default.</p>
-        <div className="chip-grid">
-          {TOOLS.map((tool) => {
-            const isOn = settings.visibleTools.includes(tool.id)
-            return (
-              <button
-                key={tool.id}
-                className={`chip ${isOn ? "is-active" : ""}`}
-                onClick={() => handleToggleTool(tool.id)}>
-                <span className="chip-icon">{tool.icon}</span>
-                {tool.name}
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* Organizations & Projects */}
-      {cachedData && cachedData.organizations.length > 0 && (
-        <section className="card">
-          <h2 className="card-title">Organizations & projects</h2>
-          <p className="card-desc">Drag to reorder. Hidden items won't appear in the popup.</p>
-
-          <label className="switch-row">
-            <span className="switch-label">Flat list (no org headers)</span>
+        <nav className="sidebar-nav">
+          {navItems.map((item) => (
             <button
-              className={`switch ${settings.flatList ? "is-on" : ""}`}
-              onClick={() => updateSetting("flatList", !settings.flatList)}
-              role="switch"
-              aria-checked={settings.flatList}>
-              <span className="switch-thumb" />
+              key={item.id}
+              className={`sidebar-nav-item ${activeSection === item.id ? "is-active" : ""}`}
+              onClick={() => setActiveSection(item.id)}>
+              <span className="sidebar-nav-icon">{item.icon}</span>
+              {item.label}
             </button>
-          </label>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          {lastRefreshed && <span className="sidebar-cache-status">Updated {formatTimeAgo(lastRefreshed)}</span>}
+        </div>
+      </aside>
 
-          {/* Orgs */}
-          {!settings.flatList && sortedOrgs.length > 1 && (
-            <div className="list-section">
-              <div className="list-label">Organizations</div>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleOrgDragEnd}>
-                <SortableContext
-                  items={sortedOrgs.map((o) => o.id)}
-                  strategy={verticalListSortingStrategy}>
-                  {sortedOrgs.map((org) => (
-                    <SortableOrgItem
-                      key={org.id}
-                      org={org}
-                      isHidden={settings.hiddenOrgs.includes(org.id)}
-                      onToggleVisibility={() => {
-                        const hidden = settings.hiddenOrgs.includes(org.id)
-                          ? settings.hiddenOrgs.filter((id) => id !== org.id)
-                          : [...settings.hiddenOrgs, org.id]
-                        updateSetting("hiddenOrgs", hidden)
-                      }}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
+      <main className="content">
+        {activeSection === "connection" && (
+          <section className="content-section">
+            <h2 className="content-title">Connection</h2>
+            <p className="content-desc">Connect to your PostHog instance with a personal API key.</p>
+            <div className="card">
+              <div className="field">
+                <label className="field-label">Instance URL</label>
+                <input className="field-input" type="text" value={settings.instanceUrl}
+                  onChange={(e) => updateSettingDebounced("instanceUrl", e.target.value)}
+                  placeholder="https://us.posthog.com" />
+              </div>
+              <div className="field">
+                <label className="field-label">Personal API Key</label>
+                <div className="field-input-wrap">
+                  <input className="field-input" type={showApiKey ? "text" : "password"} value={settings.apiKey}
+                    onChange={(e) => updateSettingDebounced("apiKey", e.target.value)} placeholder="phx_..." />
+                  <button className="field-input-action" onClick={() => setShowApiKey(!showApiKey)} type="button">
+                    {showApiKey ? "Hide" : "Show"}
+                  </button>
+                </div>
+                <p className="field-hint">
+                  <a href={`${settings.instanceUrl.replace(/\/$/, "")}/settings/user-api-keys`}
+                    target="_blank" rel="noopener noreferrer">Create a key</a>
+                  {" "}&mdash; use <strong>All access</strong> preset, or at minimum: organization:read, dashboard:read, project:read
+                </p>
+              </div>
+              <div className="card-actions">
+                {isCustomUrl && !permissionGranted && (
+                  <button className="btn btn-outline" onClick={handleGrantAccess}>Grant Access</button>
+                )}
+                <button className="btn btn-primary" onClick={handleTestConnection} disabled={testing}>
+                  {testing ? "Testing..." : "Test Connection"}
+                </button>
+                {testStatus && <span className={`status-badge ${testStatus.type}`}>{testStatus.message}</span>}
+              </div>
+              {isCustomUrl && <p className="field-hint">Self-hosted URL &mdash; click "Grant Access" first.</p>}
             </div>
-          )}
+          </section>
+        )}
 
-          {/* Projects */}
-          <div className="list-section">
-            <div className="list-label">Projects</div>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleProjectDragEnd}>
-              <SortableContext
-                items={sortedProjects.map((p) => `project-${p.id}`)}
-                strategy={verticalListSortingStrategy}>
-                {sortedProjects.map((project) => (
-                  <SortableProjectItem
-                    key={project.id}
-                    project={project}
-                    orgName={project.orgName}
-                    isHidden={settings.hiddenProjects.includes(project.id)}
-                    hasOverride={project.id in settings.projectToolOverrides}
-                    isOverrideExpanded={expandedProjectOverride === project.id}
-                    onToggleVisibility={() => {
-                      const hidden = settings.hiddenProjects.includes(project.id)
-                        ? settings.hiddenProjects.filter((id) => id !== project.id)
-                        : [...settings.hiddenProjects, project.id]
-                      updateSetting("hiddenProjects", hidden)
-                    }}
-                    onToggleOverrideExpand={() =>
-                      setExpandedProjectOverride(
-                        expandedProjectOverride === project.id ? null : project.id
-                      )
-                    }
-                    overrideContent={
-                      <>
-                        <div className="chip-grid">
-                          {TOOLS.map((tool) => {
-                            const effectiveTools =
-                              settings.projectToolOverrides[project.id] ?? settings.visibleTools
-                            const isOn = effectiveTools.includes(tool.id)
-                            return (
-                              <button
-                                key={tool.id}
-                                className={`chip chip-sm ${isOn ? "is-active" : ""}`}
-                                onClick={() => handleToggleProjectTool(project.id, tool.id)}>
-                                <span className="chip-icon">{tool.icon}</span>
-                                {tool.name}
-                              </button>
-                            )
-                          })}
-                        </div>
-                        {project.id in settings.projectToolOverrides && (
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={() => handleResetProjectOverride(project.id)}>
-                            Reset to defaults
-                          </button>
-                        )}
-                      </>
-                    }
-                  />
+        {activeSection === "tools" && (
+          <section className="content-section">
+            <h2 className="content-title">Default tools</h2>
+            <p className="content-desc">Choose which tools appear for all projects by default.</p>
+            <div className="card">
+              <div className="chip-grid">
+                {TOOLS.map((tool) => (
+                  <button key={tool.id} className={`chip ${settings.visibleTools.includes(tool.id) ? "is-active" : ""}`}
+                    onClick={() => handleToggleTool(tool.id)}>
+                    <span className="chip-icon">{tool.icon}</span>{tool.name}
+                  </button>
                 ))}
-              </SortableContext>
-            </DndContext>
-          </div>
-        </section>
-      )}
+              </div>
+            </div>
+          </section>
+        )}
 
-      {/* Cache */}
-      <section className="card">
-        <h2 className="card-title">Cache</h2>
-        <div className="cache-row">
-          <span className="cache-status">
-            {lastRefreshed ? `Updated ${formatTimeAgo(lastRefreshed)}` : "No data yet"}
-          </span>
-          <button className="btn btn-outline btn-sm" onClick={handleRefreshNow}>
-            Refresh now
-          </button>
-          <select
-            className="field-select"
-            value={settings.refreshIntervalMinutes}
-            onChange={(e) => updateSetting("refreshIntervalMinutes", parseInt(e.target.value))}>
-            <option value={1}>Every 1 min</option>
-            <option value={5}>Every 5 min</option>
-            <option value={15}>Every 15 min</option>
-            <option value={30}>Every 30 min</option>
-          </select>
-        </div>
-      </section>
+        {activeSection === "projects" && cachedData && cachedData.organizations.length > 0 && (
+          <section className="content-section">
+            <h2 className="content-title">Organizations & projects</h2>
+            <p className="content-desc">Drag to reorder. Hidden items won't appear in the popup.</p>
+            <div className="card">
+              <label className="switch-row">
+                <span className="switch-label">Flat list (no org headers)</span>
+                <button className={`switch ${settings.flatList ? "is-on" : ""}`}
+                  onClick={() => updateSetting("flatList", !settings.flatList)}
+                  role="switch" aria-checked={settings.flatList}>
+                  <span className="switch-thumb" />
+                </button>
+              </label>
+
+              {!settings.flatList && sortedOrgs.length > 1 && (
+                <div className="list-section">
+                  <div className="list-label">Organizations</div>
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleOrgDragEnd}>
+                    <SortableContext items={sortedOrgs.map((o) => o.id)} strategy={verticalListSortingStrategy}>
+                      {sortedOrgs.map((org) => (
+                        <SortableOrgItem key={org.id} org={org}
+                          isHidden={settings.hiddenOrgs.includes(org.id)}
+                          onToggleVisibility={() => {
+                            const hidden = settings.hiddenOrgs.includes(org.id)
+                              ? settings.hiddenOrgs.filter((id) => id !== org.id) : [...settings.hiddenOrgs, org.id]
+                            updateSetting("hiddenOrgs", hidden)
+                          }} />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                </div>
+              )}
+
+              <div className="list-section">
+                <div className="list-label">Projects</div>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleProjectDragEnd}>
+                  <SortableContext items={sortedProjects.map((p) => `project-${p.id}`)} strategy={verticalListSortingStrategy}>
+                    {sortedProjects.map((project) => (
+                      <SortableProjectItem key={project.id} project={project} orgName={project.orgName}
+                        isHidden={settings.hiddenProjects.includes(project.id)}
+                        hasOverride={project.id in settings.projectToolOverrides}
+                        isOverrideExpanded={expandedProjectOverride === project.id}
+                        onToggleVisibility={() => {
+                          const hidden = settings.hiddenProjects.includes(project.id)
+                            ? settings.hiddenProjects.filter((id) => id !== project.id) : [...settings.hiddenProjects, project.id]
+                          updateSetting("hiddenProjects", hidden)
+                        }}
+                        onToggleOverrideExpand={() => setExpandedProjectOverride(expandedProjectOverride === project.id ? null : project.id)}
+                        overrideContent={<>
+                          <div className="chip-grid">
+                            {TOOLS.map((tool) => {
+                              const eff = settings.projectToolOverrides[project.id] ?? settings.visibleTools
+                              return (
+                                <button key={tool.id} className={`chip chip-sm ${eff.includes(tool.id) ? "is-active" : ""}`}
+                                  onClick={() => handleToggleProjectTool(project.id, tool.id)}>
+                                  <span className="chip-icon">{tool.icon}</span>{tool.name}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          {project.id in settings.projectToolOverrides && (
+                            <button className="btn btn-ghost btn-sm" onClick={() => handleResetProjectOverride(project.id)}>
+                              Reset to defaults
+                            </button>
+                          )}
+                        </>} />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeSection === "cache" && (
+          <section className="content-section">
+            <h2 className="content-title">Cache</h2>
+            <p className="content-desc">Control how often data is refreshed from PostHog.</p>
+            <div className="card">
+              <div className="cache-row">
+                <span className="cache-status">{lastRefreshed ? `Updated ${formatTimeAgo(lastRefreshed)}` : "No data yet"}</span>
+                <button className="btn btn-outline btn-sm" onClick={handleRefreshNow}>Refresh now</button>
+                <select className="field-select" value={settings.refreshIntervalMinutes}
+                  onChange={(e) => updateSetting("refreshIntervalMinutes", parseInt(e.target.value))}>
+                  <option value={1}>Every 1 min</option>
+                  <option value={5}>Every 5 min</option>
+                  <option value={15}>Every 15 min</option>
+                  <option value={30}>Every 30 min</option>
+                </select>
+              </div>
+            </div>
+          </section>
+        )}
+      </main>
     </div>
   )
 }
