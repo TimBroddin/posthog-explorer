@@ -1,8 +1,8 @@
 {
   "name": "posthog-explorer",
-  "displayName": "Posthog explorer",
-  "version": "0.0.1",
-  "description": "A browser extension to quickly switch between your PostHog projects.",
+  "displayName": "PostHog Explorer",
+  "version": "0.1.0",
+  "description": "Quickly navigate your PostHog projects, dashboards, and insights.",
   "author": "Titans of Industry",
   "scripts": {
     "dev": "plasmo dev",

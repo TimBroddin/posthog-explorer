@@ -21,10 +21,23 @@ A Chrome extension for quickly navigating your PostHog projects, dashboards, and
 - **Light & dark mode** — Follows your OS preference
 - **Self-hosted support** — Works with PostHog Cloud and self-hosted instances
 
+## Installation
+
+### Chrome Web Store
+
+PostHog Explorer has been submitted to the Chrome Web Store and is pending review. Once approved, you'll be able to install it directly from there.
+
+### Manual install (GitHub Release)
+
+1. Download the latest `chrome-mv3-prod.zip` from the [Releases](https://github.com/TimBroddin/posthog-explorer/releases) page
+2. Unzip the file
+3. Go to `chrome://extensions` in Chrome
+4. Enable **Developer mode** (top right)
+5. Click **Load unpacked** and select the unzipped folder
+
 ## Setup
 
-1. Install the extension
-2. Click the hedgehog icon in your toolbar
+1. Click the hedgehog icon in your toolbar
 3. Click "Open Settings"
 4. Enter your PostHog instance URL (e.g., `https://eu.posthog.com`)
 5. [Create a Personal API key](https://app.posthog.com/settings/user-api-keys) with scopes: `organization:read`, `project:read`, `dashboard:read`, `insight:read`
