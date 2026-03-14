@@ -1,33 +1,58 @@
-This is a [Plasmo extension](https://docs.plasmo.com/) project bootstrapped with [`plasmo init`](https://www.npmjs.com/package/plasmo).
+# 🦔 PostHog Explorer
 
-## Getting Started
+A Chrome extension for quickly navigating your PostHog projects, dashboards, and insights.
 
-First, run the development server:
+## Features
+
+- **Multi-org support** — See all your organizations and projects in one place
+- **Quick access** — Jump to any PostHog tool (dashboards, insights, session replay, feature flags, etc.)
+- **Dashboard & insight browser** — Expand to see individual dashboards and saved insights per project
+- **Star favorites** — Star dashboards and insights for quick access in the Starred tab
+- **Recent visits** — Track your recently visited PostHog pages
+- **Search** — Filter across projects, dashboards, and insights
+- **Per-project configuration** — Customize which tools are visible for each project
+- **Drag-and-drop ordering** — Reorder organizations and projects in settings
+- **Hide projects** — Hide projects or orgs you don't need
+- **Flat list mode** — Optionally show all projects without org grouping
+- **Light & dark mode** — Follows your OS preference
+- **Self-hosted support** — Works with PostHog Cloud and self-hosted instances
+
+## Setup
+
+1. Install the extension
+2. Click the hedgehog icon in your toolbar
+3. Click "Open Settings"
+4. Enter your PostHog instance URL (e.g., `https://eu.posthog.com`)
+5. [Create a Personal API key](https://app.posthog.com/settings/user-api-keys) with scopes: `organization:read`, `project:read`, `dashboard:read`, `insight:read`
+6. Paste the key and click "Test Connection"
+
+## Development
+
+Built with [Plasmo](https://www.plasmo.com/), React, and TypeScript.
 
 ```bash
+# Install dependencies
+pnpm install
+
+# Start development server (hot reload)
 pnpm dev
-# or
-npm run dev
-```
 
-Open your browser and load the appropriate development build. For example, if you are developing for the chrome browser, using manifest v3, use: `build/chrome-mv3-dev`.
+# Load in Chrome: go to chrome://extensions, enable Developer mode,
+# click "Load unpacked", select the build/chrome-mv3-dev folder
 
-You can start editing the popup by modifying `popup.tsx`. It should auto-update as you make changes. To add an options page, simply add a `options.tsx` file to the root of the project, with a react component default exported. Likewise to add a content page, add a `content.ts` file to the root of the project, importing some module and do some logic, then reload the extension on your browser.
-
-For further guidance, [visit our Documentation](https://docs.plasmo.com/)
-
-## Making production build
-
-Run the following:
-
-```bash
+# Production build
 pnpm build
-# or
-npm run build
+
+# Package for store submission
+pnpm package
 ```
 
-This should create a production bundle for your extension, ready to be zipped and published to the stores.
+## Credits
 
-## Submit to the webstores
+- Hedgehog icon from [Twemoji](https://github.com/twitter/twemoji) (MIT License)
+- Built with [Plasmo](https://www.plasmo.com/)
+- Drag and drop powered by [@dnd-kit](https://dndkit.com/)
 
-The easiest way to deploy your Plasmo extension is to use the built-in [bpp](https://bpp.browser.market) GitHub action. Prior to using this action however, make sure to build your extension and upload the first version to the store to establish the basic credentials. Then, simply follow [this setup instruction](https://docs.plasmo.com/framework/workflows/submit) and you should be on your way for automated submission!
+## License
+
+MIT
