@@ -215,3 +215,17 @@ h1 {
   color: var(--text-muted);
   margin-top: 8px;
 }
+
+.hint strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.api-key-link {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.api-key-link:hover {
+  text-decoration: underline;
+}

@@ -166,6 +166,16 @@ function Options() {
               {showApiKey ? "Hide" : "Show"}
             </button>
           </div>
+          <p className="hint">
+            <a
+              href={`${settings.instanceUrl.replace(/\/$/, "")}/settings/user-api-keys`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="api-key-link">
+              Create a Personal API key
+            </a>
+            {" "}with these scopes: <strong>organization:read</strong>, <strong>dashboard:read</strong>, <strong>project:read</strong>
+          </p>
         </div>
         <div className="btn-row">
           {isCustomUrl && !permissionGranted && (
