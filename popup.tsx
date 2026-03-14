@@ -257,7 +257,7 @@ function Popup() {
       <div className="tabs">
         <button className={`tab ${activeTab === "all" ? "is-active" : ""}`} onClick={() => setActiveTab("all")}>All</button>
         <button className={`tab ${activeTab === "starred" ? "is-active" : ""}`} onClick={() => setActiveTab("starred")}>
-          Starred {settings.starredItems.length > 0 && <span className="tab-count">{settings.starredItems.length}</span>}
+          Starred
         </button>
         <button className={`tab ${activeTab === "recent" ? "is-active" : ""}`} onClick={() => setActiveTab("recent")}>Recent</button>
       </div>
