@@ -24,7 +24,14 @@
     "typescript": "5.3.3"
   },
   "manifest": {
+    "permissions": [
+      "storage",
+      "alarms"
+    ],
     "host_permissions": [
+      "https://*.posthog.com/*"
+    ],
+    "optional_host_permissions": [
       "https://*/*"
     ]
   }
