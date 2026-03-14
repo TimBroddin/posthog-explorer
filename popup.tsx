@@ -348,24 +348,7 @@ function Popup() {
 function Header({ onSettings }: { onSettings: () => void }) {
   return (
     <div className="header">
-      <div className="header-logo">
-        <svg width="16" height="16" viewBox="0 0 512 512" fill="none">
-          <rect width="512" height="512" rx="108" fill="#F54E00"/>
-          <g transform="translate(256,270)">
-            <ellipse cx="-10" cy="-50" rx="120" ry="90" fill="#2D2926"/>
-            <polygon points="-100,-80 -80,-140 -60,-75" fill="#2D2926"/>
-            <polygon points="-60,-100 -40,-160 -20,-95" fill="#2D2926"/>
-            <polygon points="-20,-110 5,-170 30,-100" fill="#2D2926"/>
-            <polygon points="25,-100 50,-160 70,-90" fill="#2D2926"/>
-            <polygon points="60,-80 85,-135 100,-65" fill="#2D2926"/>
-            <ellipse cx="10" cy="10" rx="95" ry="75" fill="#F0D6A8"/>
-            <ellipse cx="55" cy="5" rx="65" ry="60" fill="#F5E0BE"/>
-            <circle cx="110" cy="10" r="12" fill="#2D2926"/>
-            <circle cx="80" cy="-12" r="10" fill="#2D2926"/>
-            <circle cx="83" cy="-15" r="3.5" fill="white"/>
-          </g>
-        </svg>
-      </div>
+      <span className="header-logo">🦔</span>
       <span className="header-title">PostHog Explorer</span>
       <button className="header-settings" onClick={onSettings} title="Settings">⚙</button>
     </div>
