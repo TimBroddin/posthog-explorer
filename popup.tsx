@@ -32,11 +32,20 @@ function Popup() {
   const [showDashboards, setShowDashboards] = useState<Set<number>>(new Set())
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<"all" | "recent">("all")
+  const [activeTab, setActiveTabState] = useState<"all" | "recent">("all")
+
+  const setActiveTab = useCallback((tab: "all" | "recent") => {
+    setActiveTabState(tab)
+    chrome.storage.local.set({ activePopupTab: tab })
+  }, [])
 
   useEffect(() => {
     async function load() {
-      const [s, c, r] = await Promise.all([getSettings(), getCachedData(), getRecents()])
+      const [s, c, r, tabResult] = await Promise.all([
+        getSettings(), getCachedData(), getRecents(),
+        chrome.storage.local.get("activePopupTab")
+      ])
+      if (tabResult.activePopupTab) setActiveTabState(tabResult.activePopupTab)
       setSettings(s)
       setCache(c)
       setRecents(r)
@@ -93,9 +102,9 @@ function Popup() {
   const handleOpenLink = useCallback(
     async (e: React.MouseEvent, url: string, name: string, icon: string, projectName: string) => {
       e.preventDefault()
-      await chrome.tabs.create({ url })
-      const newRecents = await addRecent({ name, url, icon, projectName, timestamp: Date.now() })
-      setRecents(newRecents)
+      // Save recent BEFORE opening tab — popup is destroyed when a new tab opens
+      await addRecent({ name, url, icon, projectName, timestamp: Date.now() })
+      chrome.tabs.create({ url })
     },
     []
   )
