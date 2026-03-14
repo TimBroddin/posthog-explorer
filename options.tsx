@@ -251,6 +251,141 @@ function Options() {
         </div>
       </div>
 
+      {/* Organizations & Projects — ordering and visibility */}
+      {cachedData && cachedData.organizations.length > 0 && (
+        <div className="section">
+          <h2>Organizations & Projects</h2>
+          <p className="hint" style={{ marginTop: 0, marginBottom: 12 }}>
+            Drag to reorder, toggle visibility. Hidden items won't appear in the popup.
+          </p>
+          {(() => {
+            // Sort orgs for display using current order
+            const orgs = [...cachedData.organizations].sort((a, b) => {
+              const ai = settings.orgOrder.indexOf(a.id)
+              const bi = settings.orgOrder.indexOf(b.id)
+              if (ai === -1 && bi === -1) return a.name.localeCompare(b.name)
+              if (ai === -1) return 1
+              if (bi === -1) return -1
+              return ai - bi
+            })
+            return orgs.map((org, orgIdx) => {
+              const isOrgHidden = settings.hiddenOrgs.includes(org.id)
+              // Sort projects for display
+              const projects = [...org.projects].sort((a, b) => {
+                const ai = settings.projectOrder.indexOf(a.id)
+                const bi = settings.projectOrder.indexOf(b.id)
+                if (ai === -1 && bi === -1) return a.name.localeCompare(b.name)
+                if (ai === -1) return 1
+                if (bi === -1) return -1
+                return ai - bi
+              })
+              return (
+                <div key={org.id} className="sort-org">
+                  <div className="sort-org-header">
+                    <div className="sort-buttons">
+                      <button
+                        className="sort-btn"
+                        disabled={orgIdx === 0}
+                        onClick={() => {
+                          const ids = orgs.map((o) => o.id)
+                          const idx = ids.indexOf(org.id)
+                          if (idx > 0) {
+                            [ids[idx - 1], ids[idx]] = [ids[idx], ids[idx - 1]]
+                            updateSetting("orgOrder", ids)
+                          }
+                        }}
+                        title="Move up">
+                        ▲
+                      </button>
+                      <button
+                        className="sort-btn"
+                        disabled={orgIdx === orgs.length - 1}
+                        onClick={() => {
+                          const ids = orgs.map((o) => o.id)
+                          const idx = ids.indexOf(org.id)
+                          if (idx < ids.length - 1) {
+                            [ids[idx], ids[idx + 1]] = [ids[idx + 1], ids[idx]]
+                            updateSetting("orgOrder", ids)
+                          }
+                        }}
+                        title="Move down">
+                        ▼
+                      </button>
+                    </div>
+                    <span className={isOrgHidden ? "sort-name hidden-name" : "sort-name"}>
+                      {org.name}
+                    </span>
+                    <button
+                      className={`visibility-btn ${isOrgHidden ? "is-hidden" : ""}`}
+                      onClick={() => {
+                        const hidden = isOrgHidden
+                          ? settings.hiddenOrgs.filter((id) => id !== org.id)
+                          : [...settings.hiddenOrgs, org.id]
+                        updateSetting("hiddenOrgs", hidden)
+                      }}
+                      title={isOrgHidden ? "Show organization" : "Hide organization"}>
+                      {isOrgHidden ? "Hidden" : "Visible"}
+                    </button>
+                  </div>
+                  {!isOrgHidden &&
+                    projects.map((project, projIdx) => {
+                      const isProjectHidden = settings.hiddenProjects.includes(project.id)
+                      return (
+                        <div key={project.id} className="sort-project">
+                          <div className="sort-buttons">
+                            <button
+                              className="sort-btn"
+                              disabled={projIdx === 0}
+                              onClick={() => {
+                                const ids = projects.map((p) => p.id)
+                                const idx = ids.indexOf(project.id)
+                                if (idx > 0) {
+                                  [ids[idx - 1], ids[idx]] = [ids[idx], ids[idx - 1]]
+                                  updateSetting("projectOrder", ids)
+                                }
+                              }}
+                              title="Move up">
+                              ▲
+                            </button>
+                            <button
+                              className="sort-btn"
+                              disabled={projIdx === projects.length - 1}
+                              onClick={() => {
+                                const ids = projects.map((p) => p.id)
+                                const idx = ids.indexOf(project.id)
+                                if (idx < ids.length - 1) {
+                                  [ids[idx], ids[idx + 1]] = [ids[idx + 1], ids[idx]]
+                                  updateSetting("projectOrder", ids)
+                                }
+                              }}
+                              title="Move down">
+                              ▼
+                            </button>
+                          </div>
+                          <span className={isProjectHidden ? "sort-name hidden-name" : "sort-name"}>
+                            {project.name}
+                          </span>
+                          <button
+                            className={`visibility-btn ${isProjectHidden ? "is-hidden" : ""}`}
+                            onClick={() => {
+                              const hidden = isProjectHidden
+                                ? settings.hiddenProjects.filter((id) => id !== project.id)
+                                : [...settings.hiddenProjects, project.id]
+                              updateSetting("hiddenProjects", hidden)
+                            }}
+                            title={isProjectHidden ? "Show project" : "Hide project"}>
+                            {isProjectHidden ? "Hidden" : "Visible"}
+                          </button>
+                        </div>
+                      )
+                    })}
+                </div>
+              )
+            })
+          })()}
+        </div>
+      )}
+
       {/* Per-Project Tool Overrides */}
       {allProjects.length > 0 && (
         <div className="section">

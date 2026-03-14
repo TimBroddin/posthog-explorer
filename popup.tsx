@@ -138,25 +138,61 @@ function Popup() {
     [settings]
   )
 
+  // Sort and filter orgs/projects
+  const sortedOrgs = useMemo(() => {
+    if (!cache?.organizations || !settings) return []
+
+    // Hide orgs and projects
+    const visible = cache.organizations
+      .filter((org) => !settings.hiddenOrgs.includes(org.id))
+      .map((org) => ({
+        ...org,
+        projects: org.projects.filter((p) => !settings.hiddenProjects.includes(p.id))
+      }))
+      .filter((org) => org.projects.length > 0)
+
+    // Sort orgs
+    const orgOrder = settings.orgOrder
+    visible.sort((a, b) => {
+      const ai = orgOrder.indexOf(a.id)
+      const bi = orgOrder.indexOf(b.id)
+      if (ai === -1 && bi === -1) return a.name.localeCompare(b.name)
+      if (ai === -1) return 1
+      if (bi === -1) return -1
+      return ai - bi
+    })
+
+    // Sort projects within each org
+    const projectOrder = settings.projectOrder
+    for (const org of visible) {
+      org.projects.sort((a, b) => {
+        const ai = projectOrder.indexOf(a.id)
+        const bi = projectOrder.indexOf(b.id)
+        if (ai === -1 && bi === -1) return a.name.localeCompare(b.name)
+        if (ai === -1) return 1
+        if (bi === -1) return -1
+        return ai - bi
+      })
+    }
+
+    return visible
+  }, [cache, settings])
+
   // Filter by search
   const filteredOrgs = useMemo(() => {
-    if (!cache?.organizations || !search.trim()) return cache?.organizations ?? []
+    if (!search.trim()) return sortedOrgs
 
     const q = search.toLowerCase()
     const visibleToolNames = TOOLS.filter((t) =>
       settings?.visibleTools.includes(t.id)
     )
 
-    return cache.organizations
+    return sortedOrgs
       .map((org) => {
         const filteredProjects = org.projects.filter((project) => {
-          // Match project name
           if (project.name.toLowerCase().includes(q)) return true
-          // Match dashboard names
           if (project.dashboards?.some((d) => d.name.toLowerCase().includes(q))) return true
-          // Match shortcut labels
           if (project.shortcuts?.some((s) => s.label.toLowerCase().includes(q))) return true
-          // Match tool names (e.g., "replay" → Session Replay)
           if (visibleToolNames.some((t) => t.name.toLowerCase().includes(q))) return true
           return false
         })
@@ -164,7 +200,7 @@ function Popup() {
         return { ...org, projects: filteredProjects }
       })
       .filter(Boolean) as CachedOrganization[]
-  }, [cache, search, settings])
+  }, [sortedOrgs, search, settings])
 
   // --- Loading ---
   if (loading) {

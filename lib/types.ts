@@ -77,6 +77,10 @@ export interface Settings {
   visibleTools: string[]
   expandedProjects: number[]
   projectToolOverrides: Record<number, string[]> // projectId → tool IDs (overrides global visibleTools)
+  orgOrder: string[]       // ordered org IDs — orgs not listed appear at the end
+  projectOrder: number[]   // ordered project IDs — projects not listed appear at the end
+  hiddenOrgs: string[]     // org IDs to hide from popup
+  hiddenProjects: number[] // project IDs to hide from popup
 }
 
 export interface ToolDefinition {

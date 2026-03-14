@@ -25,7 +25,11 @@ export const DEFAULT_SETTINGS: Settings = {
   refreshIntervalMinutes: 5,
   visibleTools: TOOLS.map((t) => t.id),
   expandedProjects: [],
-  projectToolOverrides: {}
+  projectToolOverrides: {},
+  orgOrder: [],
+  projectOrder: [],
+  hiddenOrgs: [],
+  hiddenProjects: []
 }
 
 export const MAX_RECENTS = 10
