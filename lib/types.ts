@@ -25,6 +25,8 @@ export interface ApiShortcut {
   id: string
   path: string
   type: string
+  ref?: string
+  href?: string
 }
 
 // Cached data types
@@ -49,8 +51,9 @@ export interface Dashboard {
 
 export interface Shortcut {
   id: string
-  path: string
   label: string
+  href: string
+  type: string
 }
 
 export interface CachedData {
@@ -73,6 +76,7 @@ export interface Settings {
   refreshIntervalMinutes: number
   visibleTools: string[]
   expandedProjects: number[]
+  projectToolOverrides: Record<number, string[]> // projectId → tool IDs (overrides global visibleTools)
 }
 
 export interface ToolDefinition {

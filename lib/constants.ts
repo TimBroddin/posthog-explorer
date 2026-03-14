@@ -24,7 +24,8 @@ export const DEFAULT_SETTINGS: Settings = {
   instanceUrl: "https://us.posthog.com",
   refreshIntervalMinutes: 5,
   visibleTools: TOOLS.map((t) => t.id),
-  expandedProjects: []
+  expandedProjects: [],
+  projectToolOverrides: {}
 }
 
 export const MAX_RECENTS = 10

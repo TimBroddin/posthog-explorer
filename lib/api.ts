@@ -91,8 +91,7 @@ export async function fetchDashboards(
 export async function fetchShortcuts(
   instanceUrl: string,
   apiKey: string,
-  projectId: number,
-  dashboards: Dashboard[]
+  projectId: number
 ): Promise<Shortcut[]> {
   try {
     const shortcuts = await fetchAllPages<ApiShortcut>(
@@ -100,34 +99,19 @@ export async function fetchShortcuts(
       apiKey,
       `/api/projects/${projectId}/file_system_shortcut/`
     )
-    return shortcuts.map((s) => ({
-      id: s.id,
-      path: s.path,
-      label: deriveShortcutLabel(s, dashboards)
-    }))
+    return shortcuts
+      .filter((s) => s.href) // only include shortcuts with a URL
+      .map((s) => ({
+        id: s.id,
+        label: s.path, // path is the display name in PostHog's API
+        href: s.href!,
+        type: s.type
+      }))
   } catch (error) {
     // Endpoint may not exist on older self-hosted instances (404)
     console.warn(`Shortcuts not available for project ${projectId}:`, error)
     return []
   }
-}
-
-function deriveShortcutLabel(shortcut: ApiShortcut, dashboards: Dashboard[]): string {
-  // Try to extract resource type and ID from path
-  // e.g., "project/36349/dashboard/12345" → type=dashboard, id=12345
-  const segments = shortcut.path.replace(/^\//, "").split("/")
-
-  // Look for known resource types
-  const dashboardIndex = segments.indexOf("dashboard")
-  if (dashboardIndex !== -1 && dashboardIndex + 1 < segments.length) {
-    const id = parseInt(segments[dashboardIndex + 1], 10)
-    const match = dashboards.find((d) => d.id === id)
-    if (match) return match.name
-  }
-
-  // Fallback: last meaningful segment
-  const lastSegment = segments[segments.length - 1]
-  return lastSegment || shortcut.type || "Shortcut"
 }
 
 export async function fetchProjectDetails(
@@ -138,8 +122,7 @@ export async function fetchProjectDetails(
   const dashboards = await fetchDashboards(instanceUrl, apiKey, projectId)
   // Rate limit between dashboard and shortcut API calls
   await delay(API_CALL_DELAY_MS)
-  // Pass dashboards for label derivation
-  const shortcuts = await fetchShortcuts(instanceUrl, apiKey, projectId, dashboards)
+  const shortcuts = await fetchShortcuts(instanceUrl, apiKey, projectId)
   return { dashboards, shortcuts }
 }
 

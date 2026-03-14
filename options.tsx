@@ -1,16 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { testConnection } from "~lib/api"
 import { TOOLS } from "~lib/constants"
 import { getCachedData, getSettings, saveSettings } from "~lib/storage"
-import type { Settings } from "~lib/types"
+import type { CachedData, Settings } from "~lib/types"
 import { formatTimeAgo } from "~lib/utils"
 
 import "./options.css"
 
 function Options() {
   const [settings, setSettings] = useState<Settings | null>(null)
+  const [cachedData, setCachedData] = useState<CachedData | null>(null)
   const [lastRefreshed, setLastRefreshed] = useState<number | null>(null)
+  const [expandedProjectOverride, setExpandedProjectOverride] = useState<number | null>(null)
   const [showApiKey, setShowApiKey] = useState(false)
   const [testStatus, setTestStatus] = useState<{
     type: "success" | "error"
@@ -25,6 +27,7 @@ function Options() {
       const s = await getSettings()
       setSettings(s)
       const cache = await getCachedData()
+      setCachedData(cache)
       setLastRefreshed(cache?.lastRefreshed ?? null)
       // Check if permission is already granted for non-posthog.com URLs
       if (s.instanceUrl && !s.instanceUrl.includes("posthog.com")) {
@@ -126,6 +129,38 @@ function Options() {
     [settings, updateSetting]
   )
 
+  const handleToggleProjectTool = useCallback(
+    async (projectId: number, toolId: string) => {
+      if (!settings) return
+      const overrides = { ...settings.projectToolOverrides }
+      const current = overrides[projectId] ?? [...settings.visibleTools]
+      const newTools = current.includes(toolId)
+        ? current.filter((id) => id !== toolId)
+        : [...current, toolId]
+      overrides[projectId] = newTools
+      await updateSetting("projectToolOverrides", overrides)
+    },
+    [settings, updateSetting]
+  )
+
+  const handleResetProjectOverride = useCallback(
+    async (projectId: number) => {
+      if (!settings) return
+      const overrides = { ...settings.projectToolOverrides }
+      delete overrides[projectId]
+      await updateSetting("projectToolOverrides", overrides)
+    },
+    [settings, updateSetting]
+  )
+
+  // All projects from cached data
+  const allProjects = useMemo(() => {
+    if (!cachedData) return []
+    return cachedData.organizations.flatMap((org) =>
+      org.projects.map((p) => ({ ...p, orgName: org.name }))
+    )
+  }, [cachedData])
+
   if (!settings) return null
 
   const isCustomUrl =
@@ -215,6 +250,61 @@ function Options() {
           ))}
         </div>
       </div>
+
+      {/* Per-Project Tool Overrides */}
+      {allProjects.length > 0 && (
+        <div className="section">
+          <h2>Per-Project Tools</h2>
+          <p className="hint" style={{ marginTop: 0, marginBottom: 12 }}>
+            Override which tools are shown for specific projects.
+          </p>
+          {allProjects.map((project) => {
+            const hasOverride = project.id in settings.projectToolOverrides
+            const isExpanded = expandedProjectOverride === project.id
+            return (
+              <div key={project.id} className="project-override">
+                <div
+                  className="project-override-header"
+                  onClick={() =>
+                    setExpandedProjectOverride(isExpanded ? null : project.id)
+                  }>
+                  <span>{project.name}</span>
+                  <span className="project-override-org">{project.orgName}</span>
+                  {hasOverride && <span className="project-override-badge">custom</span>}
+                  <span className="project-override-chevron">{isExpanded ? "▼" : "▶"}</span>
+                </div>
+                {isExpanded && (
+                  <div className="project-override-content">
+                    <div className="tools-grid">
+                      {TOOLS.map((tool) => {
+                        const effectiveTools = settings.projectToolOverrides[project.id] ?? settings.visibleTools
+                        return (
+                          <label key={tool.id} className="tool-toggle">
+                            <input
+                              type="checkbox"
+                              checked={effectiveTools.includes(tool.id)}
+                              onChange={() => handleToggleProjectTool(project.id, tool.id)}
+                            />
+                            {tool.icon} {tool.name}
+                          </label>
+                        )
+                      })}
+                    </div>
+                    {hasOverride && (
+                      <button
+                        className="btn btn-secondary"
+                        style={{ marginTop: 8, fontSize: 11 }}
+                        onClick={() => handleResetProjectOverride(project.id)}>
+                        Reset to global defaults
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Cache */}
       <div className="section">

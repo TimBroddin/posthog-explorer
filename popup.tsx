@@ -278,7 +278,7 @@ function Popup() {
                   loading={loadingProjects.has(project.id)}
                   showDashboards={showDashboards.has(project.id)}
                   showShortcuts={showShortcuts.has(project.id)}
-                  visibleTools={settings.visibleTools}
+                  visibleTools={settings.projectToolOverrides[project.id] ?? settings.visibleTools}
                   onToggle={() => handleToggleProject(project.id)}
                   onToggleDashboards={() =>
                     setShowDashboards((prev) => {
@@ -435,8 +435,7 @@ function ProjectCard({
             <div className="foldout">
               <div className="foldout-header">Shortcuts</div>
               {project.shortcuts!.map((shortcut) => {
-                const cleanPath = shortcut.path.replace(/^\//, "")
-                const url = `${instanceUrl.replace(/\/$/, "")}/${cleanPath}`
+                const url = `${instanceUrl.replace(/\/$/, "")}${shortcut.href.startsWith("/") ? "" : "/"}${shortcut.href}`
                 return (
                   <a
                     key={shortcut.id}

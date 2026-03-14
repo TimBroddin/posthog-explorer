@@ -229,3 +229,50 @@ h1 {
 .api-key-link:hover {
   text-decoration: underline;
 }
+
+.project-override {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+
+.project-override-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  background: var(--bg);
+}
+
+.project-override-header:hover {
+  background: var(--bg-secondary);
+}
+
+.project-override-org {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.project-override-badge {
+  font-size: 9px;
+  background: var(--posthog);
+  color: white;
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.project-override-chevron {
+  margin-left: auto;
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.project-override-content {
+  padding: 8px 10px;
+  border-top: 1px solid var(--border);
+}
