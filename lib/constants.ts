@@ -2,7 +2,7 @@ import type { Settings, ToolDefinition } from "./types"
 
 export const TOOLS: ToolDefinition[] = [
   { id: "dashboards", name: "Dashboards", icon: "📊", path: "dashboards" },
-  { id: "insights", name: "Insights", icon: "💡", path: "insights" },
+  { id: "insights", name: "Product Analytics", icon: "💡", path: "insights" },
   { id: "web", name: "Web Analytics", icon: "🌐", path: "web" },
   { id: "replay", name: "Session Replay", icon: "🎬", path: "replay" },
   { id: "error_tracking", name: "Error Tracking", icon: "🐛", path: "error_tracking" },
