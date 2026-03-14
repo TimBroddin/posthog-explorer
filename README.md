@@ -2,6 +2,10 @@
 
 A Chrome extension for quickly navigating your PostHog projects, dashboards, and insights.
 
+> **Note:** This project is not affiliated with, endorsed by, or officially connected to PostHog in any way. It's an independent community tool.
+
+![Screenshot](screenshot.png)
+
 ## Features
 
 - **Multi-org support** — See all your organizations and projects in one place
@@ -48,6 +52,8 @@ pnpm package
 ```
 
 ## Credits
+
+Created by [Titans of Industry](https://www.titansofindustry.be)
 
 - Hedgehog icon from [Twemoji](https://github.com/twitter/twemoji) (MIT License)
 - Built with [Plasmo](https://www.plasmo.com/)

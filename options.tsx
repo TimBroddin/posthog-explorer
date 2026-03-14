@@ -311,6 +311,11 @@ function Options() {
         </nav>
         <div className="sidebar-footer">
           {lastRefreshed && <span className="sidebar-cache-status">Updated {formatTimeAgo(lastRefreshed)}</span>}
+          <div className="sidebar-credit">
+            Made by <a href="https://broddin.be" target="_blank" rel="noopener noreferrer">Tim Broddin</a>
+            {" / "}
+            <a href="https://www.titansofindustry.be" target="_blank" rel="noopener noreferrer">Titans of Industry</a>
+          </div>
         </div>
       </aside>
 

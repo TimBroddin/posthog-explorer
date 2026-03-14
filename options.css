@@ -151,6 +151,22 @@ body {
   color: var(--text-muted);
 }
 
+.sidebar-credit {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.sidebar-credit a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.sidebar-credit a:hover {
+  color: var(--accent);
+}
+
 /* Content */
 .content {
   flex: 1;
