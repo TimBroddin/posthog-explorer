@@ -326,7 +326,7 @@ function Options() {
                 <p className="field-hint">
                   <a href={`${settings.instanceUrl.replace(/\/$/, "")}/settings/user-api-keys`}
                     target="_blank" rel="noopener noreferrer">Create a key</a>
-                  {" "}&mdash; use <strong>All access</strong> preset, or at minimum: organization:read, dashboard:read, project:read
+                  {" "}with scopes: <strong>organization:read</strong>, <strong>project:read</strong>, <strong>dashboard:read</strong>, <strong>insight:read</strong>
                 </p>
               </div>
               <div className="card-actions">
