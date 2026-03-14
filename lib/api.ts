@@ -3,10 +3,8 @@ import type {
   ApiDashboard,
   ApiOrganization,
   ApiPaginatedResponse,
-  ApiShortcut,
   CachedOrganization,
-  Dashboard,
-  Shortcut
+  Dashboard
 } from "./types"
 import { delay } from "./utils"
 
@@ -88,40 +86,13 @@ export async function fetchDashboards(
   return dashboards.map((d) => ({ id: d.id, name: d.name }))
 }
 
-export async function fetchShortcuts(
-  instanceUrl: string,
-  apiKey: string,
-  projectId: number
-): Promise<Shortcut[]> {
-  try {
-    const shortcuts = await fetchAllPages<ApiShortcut>(
-      instanceUrl,
-      apiKey,
-      `/api/projects/${projectId}/file_system_shortcut/`
-    )
-    console.log(`[PostHog Explorer] Shortcuts for project ${projectId}:`, JSON.stringify(shortcuts, null, 2))
-    return shortcuts.map((s) => ({
-      id: s.id,
-      label: s.path,
-      href: s.href || `/project/${projectId}/${s.type}/${s.ref || ""}`,
-      type: s.type
-    }))
-  } catch (error) {
-    console.warn(`Shortcuts not available for project ${projectId}:`, error)
-    return []
-  }
-}
-
 export async function fetchProjectDetails(
   instanceUrl: string,
   apiKey: string,
   projectId: number
-): Promise<{ dashboards: Dashboard[]; shortcuts: Shortcut[] }> {
+): Promise<{ dashboards: Dashboard[] }> {
   const dashboards = await fetchDashboards(instanceUrl, apiKey, projectId)
-  // Rate limit between dashboard and shortcut API calls
-  await delay(API_CALL_DELAY_MS)
-  const shortcuts = await fetchShortcuts(instanceUrl, apiKey, projectId)
-  return { dashboards, shortcuts }
+  return { dashboards }
 }
 
 export async function testConnection(

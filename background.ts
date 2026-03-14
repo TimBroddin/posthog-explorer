@@ -92,7 +92,6 @@ async function refreshData(): Promise<void> {
               project.id
             )
             project.dashboards = details.dashboards
-            project.shortcuts = details.shortcuts
           } catch (e) {
             // Keep existing cached data if refresh fails
             const existingProject = existingCache?.organizations
@@ -100,7 +99,7 @@ async function refreshData(): Promise<void> {
               .find((p) => p.id === project.id)
             if (existingProject) {
               project.dashboards = existingProject.dashboards
-              project.shortcuts = existingProject.shortcuts
+
             }
           }
         } else {
@@ -110,7 +109,6 @@ async function refreshData(): Promise<void> {
             .find((p) => p.id === project.id)
           if (existingProject) {
             project.dashboards = existingProject.dashboards
-            project.shortcuts = existingProject.shortcuts
           }
         }
       }

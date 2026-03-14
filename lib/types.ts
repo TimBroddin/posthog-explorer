@@ -21,14 +21,6 @@ export interface ApiDashboard {
   name: string
 }
 
-export interface ApiShortcut {
-  id: string
-  path: string
-  type: string
-  ref?: string
-  href?: string
-}
-
 // Cached data types
 
 export interface CachedOrganization {
@@ -41,7 +33,6 @@ export interface CachedProject {
   id: number
   name: string
   dashboards?: Dashboard[]   // optional: lazy loaded on first expand
-  shortcuts?: Shortcut[]     // optional: lazy loaded on first expand
 }
 
 export interface Dashboard {
@@ -49,11 +40,11 @@ export interface Dashboard {
   name: string
 }
 
-export interface Shortcut {
-  id: string
-  label: string
-  href: string
-  type: string
+export interface StarredDashboard {
+  projectId: number
+  projectName: string
+  dashboardId: number
+  dashboardName: string
 }
 
 export interface CachedData {
@@ -82,6 +73,7 @@ export interface Settings {
   hiddenOrgs: string[]     // org IDs to hide from popup
   hiddenProjects: number[] // project IDs to hide from popup
   flatList: boolean        // show projects as flat list without org grouping
+  starredDashboards: StarredDashboard[]
 }
 
 export interface ToolDefinition {

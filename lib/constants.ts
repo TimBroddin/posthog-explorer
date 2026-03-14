@@ -30,7 +30,8 @@ export const DEFAULT_SETTINGS: Settings = {
   projectOrder: [],
   hiddenOrgs: [],
   hiddenProjects: [],
-  flatList: false
+  flatList: false,
+  starredDashboards: []
 }
 
 export const MAX_RECENTS = 10
