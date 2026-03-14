@@ -238,12 +238,18 @@ function Popup() {
       visibleTools={settings.projectToolOverrides[project.id] ?? settings.visibleTools}
       isStarred={isStarred}
       onToggle={() => handleToggleProject(project.id)}
-      onToggleDashboards={() => setShowDashboards((prev) => {
-        const next = new Set(prev); next.has(project.id) ? next.delete(project.id) : next.add(project.id); return next
-      })}
-      onToggleInsights={() => setShowInsights((prev) => {
-        const next = new Set(prev); next.has(project.id) ? next.delete(project.id) : next.add(project.id); return next
-      })}
+      onToggleDashboards={() => {
+        setShowDashboards((prev) => {
+          const next = new Set(prev); next.has(project.id) ? next.delete(project.id) : next.add(project.id); return next
+        })
+        setShowInsights((prev) => { const next = new Set(prev); next.delete(project.id); return next })
+      }}
+      onToggleInsights={() => {
+        setShowInsights((prev) => {
+          const next = new Set(prev); next.has(project.id) ? next.delete(project.id) : next.add(project.id); return next
+        })
+        setShowDashboards((prev) => { const next = new Set(prev); next.delete(project.id); return next })
+      }}
       onToggleStar={handleToggleStar}
       onOpenLink={handleOpenLink}
       buildUrl={buildUrl}

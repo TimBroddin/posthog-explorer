@@ -229,19 +229,6 @@ function Options() {
     })
   }, [cachedData, settings])
 
-  const sortedProjects = useMemo(() => {
-    if (!cachedData || !settings) return []
-    const projects = cachedData.organizations.flatMap((org) =>
-      org.projects.map((p) => ({ ...p, orgName: org.name, orgId: org.id }))
-    )
-    return projects.sort((a, b) => {
-      const ai = settings.projectOrder.indexOf(a.id), bi = settings.projectOrder.indexOf(b.id)
-      if (ai === -1 && bi === -1) return a.name.localeCompare(b.name)
-      if (ai === -1) return 1; if (bi === -1) return -1
-      return ai - bi
-    })
-  }, [cachedData, settings])
-
   const handleOrgDragEnd = useCallback((event: DragEndEvent) => {
     if (!settings) return
     const { active, over } = event
@@ -251,14 +238,39 @@ function Options() {
     if (oi !== -1 && ni !== -1) updateSetting("orgOrder", arrayMove(ids, oi, ni))
   }, [settings, sortedOrgs, updateSetting])
 
-  const handleProjectDragEnd = useCallback((event: DragEndEvent) => {
-    if (!settings) return
+  const handleOrgProjectDragEnd = useCallback((orgId: string, event: DragEndEvent) => {
+    if (!settings || !cachedData) return
     const { active, over } = event
     if (!over || active.id === over.id) return
-    const ids = sortedProjects.map((p) => `project-${p.id}`)
+    const org = cachedData.organizations.find((o) => o.id === orgId)
+    if (!org) return
+    const projectIds = org.projects.map((p) => p.id)
+    // Sort by current order
+    projectIds.sort((a, b) => {
+      const ai = settings.projectOrder.indexOf(a), bi = settings.projectOrder.indexOf(b)
+      if (ai === -1 && bi === -1) return 0
+      if (ai === -1) return 1; if (bi === -1) return -1
+      return ai - bi
+    })
+    const ids = projectIds.map((id) => `project-${id}`)
     const oi = ids.indexOf(active.id as string), ni = ids.indexOf(over.id as string)
-    if (oi !== -1 && ni !== -1) updateSetting("projectOrder", arrayMove(sortedProjects.map((p) => p.id), oi, ni))
-  }, [settings, sortedProjects, updateSetting])
+    if (oi === -1 || ni === -1) return
+    const reordered = arrayMove(projectIds, oi, ni)
+    // Merge into the full project order, preserving other orgs' order
+    const otherProjectIds = (settings.projectOrder || []).filter((id) => !projectIds.includes(id))
+    // Find where this org's projects should be inserted
+    const fullOrder = [...otherProjectIds]
+    // Insert at the position of the first project from this org in the current order, or at the end
+    const insertIdx = settings.projectOrder.findIndex((id) => projectIds.includes(id))
+    if (insertIdx !== -1) {
+      // Remove all this org's projects from their current positions
+      const cleaned = settings.projectOrder.filter((id) => !projectIds.includes(id))
+      cleaned.splice(Math.min(insertIdx, cleaned.length), 0, ...reordered)
+      updateSetting("projectOrder", cleaned)
+    } else {
+      updateSetting("projectOrder", [...fullOrder, ...reordered])
+    }
+  }, [settings, cachedData, updateSetting])
 
   if (!settings) return null
 
@@ -374,62 +386,69 @@ function Options() {
                 </button>
               </label>
 
-              {!settings.flatList && sortedOrgs.length > 1 && (
-                <div className="list-section">
-                  <div className="list-label">Organizations</div>
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleOrgDragEnd}>
-                    <SortableContext items={sortedOrgs.map((o) => o.id)} strategy={verticalListSortingStrategy}>
-                      {sortedOrgs.map((org) => (
-                        <SortableOrgItem key={org.id} org={org}
-                          isHidden={settings.hiddenOrgs.includes(org.id)}
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleOrgDragEnd}>
+                <SortableContext items={sortedOrgs.map((o) => o.id)} strategy={verticalListSortingStrategy}>
+                  {sortedOrgs.map((org) => {
+                    const isOrgHidden = settings.hiddenOrgs.includes(org.id)
+                    const orgProjects = [...org.projects].sort((a, b) => {
+                      const ai = settings.projectOrder.indexOf(a.id), bi = settings.projectOrder.indexOf(b.id)
+                      if (ai === -1 && bi === -1) return a.name.localeCompare(b.name)
+                      if (ai === -1) return 1; if (bi === -1) return -1
+                      return ai - bi
+                    })
+                    return (
+                      <div key={org.id} className="nested-org">
+                        <SortableOrgItem org={org}
+                          isHidden={isOrgHidden}
                           onToggleVisibility={() => {
-                            const hidden = settings.hiddenOrgs.includes(org.id)
+                            const hidden = isOrgHidden
                               ? settings.hiddenOrgs.filter((id) => id !== org.id) : [...settings.hiddenOrgs, org.id]
                             updateSetting("hiddenOrgs", hidden)
                           }} />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
-                </div>
-              )}
-
-              <div className="list-section">
-                <div className="list-label">Projects</div>
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleProjectDragEnd}>
-                  <SortableContext items={sortedProjects.map((p) => `project-${p.id}`)} strategy={verticalListSortingStrategy}>
-                    {sortedProjects.map((project) => (
-                      <SortableProjectItem key={project.id} project={project} orgName={project.orgName}
-                        isHidden={settings.hiddenProjects.includes(project.id)}
-                        hasOverride={project.id in settings.projectToolOverrides}
-                        isOverrideExpanded={expandedProjectOverride === project.id}
-                        onToggleVisibility={() => {
-                          const hidden = settings.hiddenProjects.includes(project.id)
-                            ? settings.hiddenProjects.filter((id) => id !== project.id) : [...settings.hiddenProjects, project.id]
-                          updateSetting("hiddenProjects", hidden)
-                        }}
-                        onToggleOverrideExpand={() => setExpandedProjectOverride(expandedProjectOverride === project.id ? null : project.id)}
-                        overrideContent={<>
-                          <div className="chip-grid">
-                            {TOOLS.map((tool) => {
-                              const eff = settings.projectToolOverrides[project.id] ?? settings.visibleTools
-                              return (
-                                <button key={tool.id} className={`chip chip-sm ${eff.includes(tool.id) ? "is-active" : ""}`}
-                                  onClick={() => handleToggleProjectTool(project.id, tool.id)}>
-                                  <span className="chip-icon">{tool.icon}</span>{tool.name}
-                                </button>
-                              )
-                            })}
+                        {!isOrgHidden && (
+                          <div className="nested-projects">
+                            <DndContext sensors={sensors} collisionDetection={closestCenter}
+                              onDragEnd={(event) => handleOrgProjectDragEnd(org.id, event)}>
+                              <SortableContext items={orgProjects.map((p) => `project-${p.id}`)} strategy={verticalListSortingStrategy}>
+                                {orgProjects.map((project) => (
+                                  <SortableProjectItem key={project.id} project={project} orgName={org.name}
+                                    isHidden={settings.hiddenProjects.includes(project.id)}
+                                    hasOverride={project.id in settings.projectToolOverrides}
+                                    isOverrideExpanded={expandedProjectOverride === project.id}
+                                    onToggleVisibility={() => {
+                                      const hidden = settings.hiddenProjects.includes(project.id)
+                                        ? settings.hiddenProjects.filter((id) => id !== project.id) : [...settings.hiddenProjects, project.id]
+                                      updateSetting("hiddenProjects", hidden)
+                                    }}
+                                    onToggleOverrideExpand={() => setExpandedProjectOverride(expandedProjectOverride === project.id ? null : project.id)}
+                                    overrideContent={<>
+                                      <div className="chip-grid">
+                                        {TOOLS.map((tool) => {
+                                          const eff = settings.projectToolOverrides[project.id] ?? settings.visibleTools
+                                          return (
+                                            <button key={tool.id} className={`chip chip-sm ${eff.includes(tool.id) ? "is-active" : ""}`}
+                                              onClick={() => handleToggleProjectTool(project.id, tool.id)}>
+                                              <span className="chip-icon">{tool.icon}</span>{tool.name}
+                                            </button>
+                                          )
+                                        })}
+                                      </div>
+                                      {project.id in settings.projectToolOverrides && (
+                                        <button className="btn btn-ghost btn-sm" onClick={() => handleResetProjectOverride(project.id)}>
+                                          Reset to defaults
+                                        </button>
+                                      )}
+                                    </>} />
+                                ))}
+                              </SortableContext>
+                            </DndContext>
                           </div>
-                          {project.id in settings.projectToolOverrides && (
-                            <button className="btn btn-ghost btn-sm" onClick={() => handleResetProjectOverride(project.id)}>
-                              Reset to defaults
-                            </button>
-                          )}
-                        </>} />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </SortableContext>
+              </DndContext>
             </div>
           </section>
         )}

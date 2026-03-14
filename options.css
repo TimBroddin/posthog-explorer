@@ -628,6 +628,18 @@ body {
   border-color: transparent;
 }
 
+/* Nested org > projects */
+.nested-org {
+  margin-bottom: 8px;
+}
+
+.nested-projects {
+  padding-left: 24px;
+  border-left: 2px solid var(--border);
+  margin-left: 14px;
+  margin-top: 2px;
+}
+
 /* Override panel */
 .override-panel {
   padding: 10px 10px 10px 36px;
