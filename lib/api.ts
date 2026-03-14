@@ -99,16 +99,14 @@ export async function fetchShortcuts(
       apiKey,
       `/api/projects/${projectId}/file_system_shortcut/`
     )
-    return shortcuts
-      .filter((s) => s.href) // only include shortcuts with a URL
-      .map((s) => ({
-        id: s.id,
-        label: s.path, // path is the display name in PostHog's API
-        href: s.href!,
-        type: s.type
-      }))
+    console.log(`[PostHog Explorer] Shortcuts for project ${projectId}:`, JSON.stringify(shortcuts, null, 2))
+    return shortcuts.map((s) => ({
+      id: s.id,
+      label: s.path,
+      href: s.href || `/project/${projectId}/${s.type}/${s.ref || ""}`,
+      type: s.type
+    }))
   } catch (error) {
-    // Endpoint may not exist on older self-hosted instances (404)
     console.warn(`Shortcuts not available for project ${projectId}:`, error)
     return []
   }
