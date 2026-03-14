@@ -17,7 +17,7 @@ import type {
   CachedProject,
   RecentItem,
   Settings,
-  StarredDashboard
+  StarredItem
 } from "~lib/types"
 import { formatTimeAgo } from "~lib/utils"
 
@@ -30,11 +30,12 @@ function Popup() {
   const [expandedProjects, setExpandedProjects] = useState<number[]>([])
   const [loadingProjects, setLoadingProjects] = useState<Set<number>>(new Set())
   const [showDashboards, setShowDashboards] = useState<Set<number>>(new Set())
+  const [showInsights, setShowInsights] = useState<Set<number>>(new Set())
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTabState] = useState<"all" | "recent">("all")
+  const [activeTab, setActiveTabState] = useState<"all" | "starred" | "recent">("all")
 
-  const setActiveTab = useCallback((tab: "all" | "recent") => {
+  const setActiveTab = useCallback((tab: "all" | "starred" | "recent") => {
     setActiveTabState(tab)
     chrome.storage.local.set({ activePopupTab: tab })
   }, [])
@@ -82,7 +83,7 @@ function Popup() {
               organizations: cache.organizations.map((org) => ({
                 ...org,
                 projects: org.projects.map((p) =>
-                  p.id === projectId ? { ...p, dashboards: details.dashboards } : p
+                  p.id === projectId ? { ...p, dashboards: details.dashboards, insights: details.insights } : p
                 )
               }))
             }
@@ -102,7 +103,6 @@ function Popup() {
   const handleOpenLink = useCallback(
     async (e: React.MouseEvent, url: string, name: string, icon: string, projectName: string) => {
       e.preventDefault()
-      // Save recent BEFORE opening tab — popup is destroyed when a new tab opens
       await addRecent({ name, url, icon, projectName, timestamp: Date.now() })
       chrome.tabs.create({ url })
     },
@@ -110,17 +110,21 @@ function Popup() {
   )
 
   const handleToggleStar = useCallback(
-    async (projectId: number, projectName: string, dashboardId: number, dashboardName: string) => {
+    async (item: StarredItem) => {
       if (!settings) return
-      const starred = [...settings.starredDashboards]
-      const idx = starred.findIndex((s) => s.projectId === projectId && s.dashboardId === dashboardId)
-      if (idx !== -1) {
-        starred.splice(idx, 1)
-      } else {
-        starred.push({ projectId, projectName, dashboardId, dashboardName })
-      }
-      const updated = await saveSettings({ starredDashboards: starred })
+      const starred = [...settings.starredItems]
+      const idx = starred.findIndex((s) => s.type === item.type && s.projectId === item.projectId && s.itemId === item.itemId)
+      if (idx !== -1) starred.splice(idx, 1)
+      else starred.push(item)
+      const updated = await saveSettings({ starredItems: starred })
       setSettings(updated)
+    },
+    [settings]
+  )
+
+  const isStarred = useCallback(
+    (type: "dashboard" | "insight", projectId: number, itemId: number) => {
+      return settings?.starredItems.some((s) => s.type === type && s.projectId === projectId && s.itemId === itemId) ?? false
     },
     [settings]
   )
@@ -163,6 +167,7 @@ function Popup() {
         const filteredProjects = org.projects.filter((project) => {
           if (project.name.toLowerCase().includes(q)) return true
           if (project.dashboards?.some((d) => d.name.toLowerCase().includes(q))) return true
+          if (project.insights?.some((i) => i.name.toLowerCase().includes(q))) return true
           if (visibleToolNames.some((t) => t.name.toLowerCase().includes(q))) return true
           return false
         })
@@ -171,6 +176,19 @@ function Popup() {
       })
       .filter(Boolean) as CachedOrganization[]
   }, [sortedOrgs, search, settings])
+
+  // Group starred items by project
+  const starredByProject = useMemo(() => {
+    if (!settings) return new Map<number, { projectName: string; items: StarredItem[] }>()
+    const map = new Map<number, { projectName: string; items: StarredItem[] }>()
+    for (const item of settings.starredItems) {
+      if (!map.has(item.projectId)) {
+        map.set(item.projectId, { projectName: item.projectName, items: [] })
+      }
+      map.get(item.projectId)!.items.push(item)
+    }
+    return map
+  }, [settings])
 
   if (loading) return <div className="spinner">Loading...</div>
 
@@ -200,11 +218,9 @@ function Popup() {
 
   if (cache.organizations.length === 0 && cache.lastError) {
     return (
-      <div>
-        <Header onSettings={handleOpenSettings} />
+      <div><Header onSettings={handleOpenSettings} />
         <div className="empty-state"><h3>Could not reach PostHog</h3><p>{cache.lastError}</p>
-          <button onClick={handleOpenSettings}>Check Settings</button></div>
-      </div>
+          <button onClick={handleOpenSettings}>Check Settings</button></div></div>
     )
   }
 
@@ -218,16 +234,16 @@ function Popup() {
       expanded={expandedProjects.includes(project.id) || isSearching}
       loading={loadingProjects.has(project.id)}
       showDashboards={showDashboards.has(project.id)}
+      showInsights={showInsights.has(project.id)}
       visibleTools={settings.projectToolOverrides[project.id] ?? settings.visibleTools}
-      starredDashboards={settings.starredDashboards}
+      isStarred={isStarred}
       onToggle={() => handleToggleProject(project.id)}
-      onToggleDashboards={() =>
-        setShowDashboards((prev) => {
-          const next = new Set(prev)
-          next.has(project.id) ? next.delete(project.id) : next.add(project.id)
-          return next
-        })
-      }
+      onToggleDashboards={() => setShowDashboards((prev) => {
+        const next = new Set(prev); next.has(project.id) ? next.delete(project.id) : next.add(project.id); return next
+      })}
+      onToggleInsights={() => setShowInsights((prev) => {
+        const next = new Set(prev); next.has(project.id) ? next.delete(project.id) : next.add(project.id); return next
+      })}
       onToggleStar={handleToggleStar}
       onOpenLink={handleOpenLink}
       buildUrl={buildUrl}
@@ -238,16 +254,18 @@ function Popup() {
     <div>
       <Header onSettings={handleOpenSettings} />
 
-      {/* Tabs */}
       <div className="tabs">
         <button className={`tab ${activeTab === "all" ? "is-active" : ""}`} onClick={() => setActiveTab("all")}>All</button>
+        <button className={`tab ${activeTab === "starred" ? "is-active" : ""}`} onClick={() => setActiveTab("starred")}>
+          Starred {settings.starredItems.length > 0 && <span className="tab-count">{settings.starredItems.length}</span>}
+        </button>
         <button className={`tab ${activeTab === "recent" ? "is-active" : ""}`} onClick={() => setActiveTab("recent")}>Recent</button>
       </div>
 
       {activeTab === "all" && (
         <>
           <div className="search">
-            <input type="text" placeholder="Search projects, dashboards..."
+            <input type="text" placeholder="Search projects, dashboards, insights..."
               value={search} onChange={(e) => setSearch(e.target.value)} autoFocus />
           </div>
 
@@ -255,32 +273,9 @@ function Popup() {
             <div className="error-banner">Last updated {formatTimeAgo(cache.lastRefreshed)} — refresh failed</div>
           )}
 
-          {/* Starred dashboards */}
-          {!isSearching && settings.starredDashboards.length > 0 && (
-            <>
-              <div className="section-header">Starred</div>
-              <div className="recents">
-                {settings.starredDashboards.map((s) => {
-                  const url = buildUrl(s.projectId, `dashboard/${s.dashboardId}`)
-                  return (
-                    <a key={`${s.projectId}-${s.dashboardId}`} className="recent-item" href={url}
-                      onClick={(e) => handleOpenLink(e, url, s.dashboardName, "📊", s.projectName)}>
-                      <span className="recent-icon">⭐</span>
-                      <span className="recent-name">{s.dashboardName}</span>
-                      <span className="recent-project">{s.projectName}</span>
-                    </a>
-                  )
-                })}
-              </div>
-            </>
-          )}
-
-          {/* Projects */}
           {hasResults ? (
             settings.flatList ? (
-              <div className="org-group">
-                {filteredOrgs.flatMap((org) => org.projects.map(renderProjectCard))}
-              </div>
+              <div className="org-group">{filteredOrgs.flatMap((org) => org.projects.map(renderProjectCard))}</div>
             ) : (
               filteredOrgs.map((org) => (
                 <div key={org.id}>
@@ -292,6 +287,39 @@ function Popup() {
           ) : isSearching ? (
             <div className="no-results">No matches found</div>
           ) : null}
+        </>
+      )}
+
+      {activeTab === "starred" && (
+        <>
+          {starredByProject.size > 0 ? (
+            Array.from(starredByProject.entries()).map(([projectId, { projectName, items }]) => (
+              <div key={projectId}>
+                <div className="section-header">{projectName}</div>
+                <div className="recents">
+                  {items.map((item) => {
+                    const url = item.type === "dashboard"
+                      ? buildUrl(item.projectId, `dashboard/${item.itemId}`)
+                      : buildUrl(item.projectId, `insights/${item.shortId}`)
+                    const icon = item.type === "dashboard" ? "📊" : "💡"
+                    return (
+                      <div key={`${item.type}-${item.itemId}`} className="starred-row">
+                        <a className="recent-item" href={url}
+                          onClick={(e) => handleOpenLink(e, url, item.itemName, icon, item.projectName)}>
+                          <span className="recent-icon">{icon}</span>
+                          <span className="recent-name">{item.itemName}</span>
+                        </a>
+                        <button className="star-btn is-starred"
+                          onClick={() => handleToggleStar(item)} title="Unstar">★</button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="no-results">No starred items yet. Star dashboards or insights from a project.</div>
+          )}
         </>
       )}
 
@@ -328,18 +356,20 @@ function Header({ onSettings }: { onSettings: () => void }) {
 }
 
 function ProjectCard({
-  project, expanded, loading, showDashboards, visibleTools, starredDashboards,
-  onToggle, onToggleDashboards, onToggleStar, onOpenLink, buildUrl
+  project, expanded, loading, showDashboards, showInsights, visibleTools, isStarred,
+  onToggle, onToggleDashboards, onToggleInsights, onToggleStar, onOpenLink, buildUrl
 }: {
   project: CachedProject
   expanded: boolean
   loading: boolean
   showDashboards: boolean
+  showInsights: boolean
   visibleTools: string[]
-  starredDashboards: StarredDashboard[]
+  isStarred: (type: "dashboard" | "insight", projectId: number, itemId: number) => boolean
   onToggle: () => void
   onToggleDashboards: () => void
-  onToggleStar: (projectId: number, projectName: string, dashboardId: number, dashboardName: string) => void
+  onToggleInsights: () => void
+  onToggleStar: (item: StarredItem) => void
   onOpenLink: (e: React.MouseEvent, url: string, name: string, icon: string, projectName: string) => void
   buildUrl: (projectId: number, path: string) => string
 }) {
@@ -357,11 +387,20 @@ function ProjectCard({
           <div className="tool-grid">
             {tools.map((tool) => {
               const url = buildUrl(project.id, tool.path)
+              // Dashboards and Product Analytics are dropdowns
               if (tool.id === "dashboards") {
                 return (
                   <a key={tool.id} className="tool-link" href={url}
                     onClick={(e) => { e.preventDefault(); onToggleDashboards() }}>
                     {tool.icon} {tool.name} {showDashboards ? "▴" : "▾"}
+                  </a>
+                )
+              }
+              if (tool.id === "insights") {
+                return (
+                  <a key={tool.id} className="tool-link" href={url}
+                    onClick={(e) => { e.preventDefault(); onToggleInsights() }}>
+                    {tool.icon} {tool.name} {showInsights ? "▴" : "▾"}
                   </a>
                 )
               }
@@ -376,25 +415,51 @@ function ProjectCard({
 
           {loading && <div className="spinner">Loading details...</div>}
 
+          {/* Dashboards foldout */}
           {showDashboards && project.dashboards && project.dashboards.length > 0 && (
             <div className="foldout">
               <div className="foldout-header">Dashboards</div>
               {project.dashboards.map((dashboard) => {
                 const url = buildUrl(project.id, `dashboard/${dashboard.id}`)
-                const isStarred = starredDashboards.some(
-                  (s) => s.projectId === project.id && s.dashboardId === dashboard.id
-                )
+                const starred = isStarred("dashboard", project.id, dashboard.id)
                 return (
                   <div key={dashboard.id} className="foldout-row">
                     <a className="foldout-item" href={url}
                       onClick={(e) => onOpenLink(e, url, dashboard.name, "📊", project.name)}>
                       {dashboard.name}
                     </a>
-                    <button
-                      className={`star-btn ${isStarred ? "is-starred" : ""}`}
-                      onClick={() => onToggleStar(project.id, project.name, dashboard.id, dashboard.name)}
-                      title={isStarred ? "Unstar" : "Star"}>
-                      {isStarred ? "★" : "☆"}
+                    <button className={`star-btn ${starred ? "is-starred" : ""}`}
+                      onClick={() => onToggleStar({
+                        type: "dashboard", projectId: project.id, projectName: project.name,
+                        itemId: dashboard.id, itemName: dashboard.name
+                      })} title={starred ? "Unstar" : "Star"}>
+                      {starred ? "★" : "☆"}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Insights foldout */}
+          {showInsights && project.insights && project.insights.length > 0 && (
+            <div className="foldout">
+              <div className="foldout-header">Product Analytics</div>
+              {project.insights.map((insight) => {
+                const url = buildUrl(project.id, `insights/${insight.shortId}`)
+                const starred = isStarred("insight", project.id, insight.id)
+                return (
+                  <div key={insight.id} className="foldout-row">
+                    <a className="foldout-item" href={url}
+                      onClick={(e) => onOpenLink(e, url, insight.name, "💡", project.name)}>
+                      {insight.name}
+                    </a>
+                    <button className={`star-btn ${starred ? "is-starred" : ""}`}
+                      onClick={() => onToggleStar({
+                        type: "insight", projectId: project.id, projectName: project.name,
+                        itemId: insight.id, itemName: insight.name, shortId: insight.shortId
+                      })} title={starred ? "Unstar" : "Star"}>
+                      {starred ? "★" : "☆"}
                     </button>
                   </div>
                 )

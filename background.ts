@@ -92,23 +92,23 @@ async function refreshData(): Promise<void> {
               project.id
             )
             project.dashboards = details.dashboards
+            project.insights = details.insights
           } catch (e) {
-            // Keep existing cached data if refresh fails
             const existingProject = existingCache?.organizations
               .flatMap((o) => o.projects)
               .find((p) => p.id === project.id)
             if (existingProject) {
               project.dashboards = existingProject.dashboards
-
+              project.insights = existingProject.insights
             }
           }
         } else {
-          // Preserve existing cached details for non-expanded projects
           const existingProject = existingCache?.organizations
             .flatMap((o) => o.projects)
             .find((p) => p.id === project.id)
           if (existingProject) {
             project.dashboards = existingProject.dashboards
+            project.insights = existingProject.insights
           }
         }
       }
