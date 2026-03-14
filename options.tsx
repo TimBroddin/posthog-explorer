@@ -209,7 +209,7 @@ function Options() {
               className="api-key-link">
               Create a Personal API key
             </a>
-            {" "}with these scopes: <strong>organization:read</strong>, <strong>dashboard:read</strong>, <strong>project:read</strong>
+            {" "}— use <strong>All access</strong> preset, or at minimum: <strong>organization:read</strong>, <strong>dashboard:read</strong>, <strong>project:read</strong>
           </p>
         </div>
         <div className="btn-row">
@@ -256,8 +256,16 @@ function Options() {
         <div className="section">
           <h2>Organizations & Projects</h2>
           <p className="hint" style={{ marginTop: 0, marginBottom: 12 }}>
-            Drag to reorder, toggle visibility. Hidden items won't appear in the popup.
+            Reorder and toggle visibility. Hidden items won't appear in the popup.
           </p>
+          <label className="tool-toggle" style={{ marginBottom: 12 }}>
+            <input
+              type="checkbox"
+              checked={settings.flatList}
+              onChange={() => updateSetting("flatList", !settings.flatList)}
+            />
+            Show as flat list (no org grouping)
+          </label>
           {(() => {
             // Sort orgs for display using current order
             const orgs = [...cachedData.organizations].sort((a, b) => {

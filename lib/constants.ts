@@ -29,7 +29,8 @@ export const DEFAULT_SETTINGS: Settings = {
   orgOrder: [],
   projectOrder: [],
   hiddenOrgs: [],
-  hiddenProjects: []
+  hiddenProjects: [],
+  flatList: false
 }
 
 export const MAX_RECENTS = 10

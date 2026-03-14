@@ -300,13 +300,13 @@ function Popup() {
         </>
       )}
 
-      {/* Org-grouped projects */}
+      {/* Projects */}
       {hasResults ? (
-        filteredOrgs.map((org) => (
-          <div key={org.id}>
-            <div className="section-header">{org.name}</div>
-            <div className="org-group">
-              {org.projects.map((project) => (
+        settings.flatList ? (
+          // Flat list mode — all projects in one list, no org headers
+          <div className="org-group">
+            {filteredOrgs.flatMap((org) =>
+              org.projects.map((project) => (
                 <ProjectCard
                   key={project.id}
                   project={project}
@@ -334,10 +334,48 @@ function Popup() {
                   buildUrl={buildUrl}
                   instanceUrl={settings.instanceUrl}
                 />
-              ))}
-            </div>
+              ))
+            )}
           </div>
-        ))
+        ) : (
+          // Grouped by org
+          filteredOrgs.map((org) => (
+            <div key={org.id}>
+              <div className="section-header">{org.name}</div>
+              <div className="org-group">
+                {org.projects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    expanded={expandedProjects.includes(project.id) || isSearching}
+                    loading={loadingProjects.has(project.id)}
+                    showDashboards={showDashboards.has(project.id)}
+                    showShortcuts={showShortcuts.has(project.id)}
+                    visibleTools={settings.projectToolOverrides[project.id] ?? settings.visibleTools}
+                    onToggle={() => handleToggleProject(project.id)}
+                    onToggleDashboards={() =>
+                      setShowDashboards((prev) => {
+                        const next = new Set(prev)
+                        next.has(project.id) ? next.delete(project.id) : next.add(project.id)
+                        return next
+                      })
+                    }
+                    onToggleShortcuts={() =>
+                      setShowShortcuts((prev) => {
+                        const next = new Set(prev)
+                        next.has(project.id) ? next.delete(project.id) : next.add(project.id)
+                        return next
+                      })
+                    }
+                    onOpenLink={handleOpenLink}
+                    buildUrl={buildUrl}
+                    instanceUrl={settings.instanceUrl}
+                  />
+                ))}
+              </div>
+            </div>
+          ))
+        )
       ) : isSearching ? (
         <div className="no-results">No matches found</div>
       ) : null}

@@ -81,6 +81,7 @@ export interface Settings {
   projectOrder: number[]   // ordered project IDs — projects not listed appear at the end
   hiddenOrgs: string[]     // org IDs to hide from popup
   hiddenProjects: number[] // project IDs to hide from popup
+  flatList: boolean        // show projects as flat list without org grouping
 }
 
 export interface ToolDefinition {
