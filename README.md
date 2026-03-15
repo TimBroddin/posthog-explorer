@@ -25,7 +25,7 @@ A Chrome extension for quickly navigating your PostHog projects, dashboards, and
 
 ### Chrome Web Store
 
-PostHog Explorer has been submitted to the Chrome Web Store and is pending review. Once approved, you'll be able to install it directly from there.
+Install directly from the [Chrome Web Store](https://chrome.google.com/webstore/detail/gghindipcnifclfhkpbhphjmnfphjjfm).
 
 ### Manual install (GitHub Release)
 
