@@ -357,6 +357,19 @@ function Options() {
               </div>
               {isCustomUrl && <p className="field-hint">Self-hosted URL &mdash; click "Grant Access" first.</p>}
             </div>
+            <div className="card" style={{ marginTop: 16 }}>
+              <label className="switch-row">
+                <div>
+                  <span className="switch-label">Demo mode</span>
+                  <p className="field-hint" style={{ margin: 0 }}>Show fake data in the popup — useful for screenshots.</p>
+                </div>
+                <button className={`switch ${settings.demoMode ? "is-on" : ""}`}
+                  onClick={() => updateSetting("demoMode", !settings.demoMode)}
+                  role="switch" aria-checked={settings.demoMode}>
+                  <span className="switch-thumb" />
+                </button>
+              </label>
+            </div>
           </section>
         )}
 

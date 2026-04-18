@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__posthog__organizations-get",
+      "Bash(/Users/timbroddin/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.2/skills/brainstorming/scripts/start-server.sh --project-dir /Users/timbroddin/Projects/posthog-explorer)",
+      "Bash(git add:*)",
+      "Bash(pnpm exec:*)",
+      "Bash(git *)",
+      "WebSearch",
+      "Bash(gh search:*)",
+      "Bash(gh api:*)",
+      "mcp__posthog__projects-get",
+      "Bash(pnpm add:*)",
+      "mcp__posthog__insights-get-all",
+      "WebFetch(domain:www.svgrepo.com)",
+      "Bash(curl -sL -H \"User-Agent: Mozilla/5.0\" \"https://www.svgrepo.com/show/405801/hedgehog.svg\" -o /tmp/hedgehog.svg)",
+      "Read(//tmp/**)",
+      "Bash(rsvg-convert:*)",
+      "Bash(gh repo:*)",
+      "Bash(pnpm build:*)",
+      "Bash(gh release:*)",
+      "Bash(sips:*)",
+      "Bash(tree:*)"
+    ]
+  }
+}

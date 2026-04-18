@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { fetchProjectDetails } from "~lib/api"
-import { TOOLS } from "~lib/constants"
+import { DEMO_DATA, DEMO_RECENTS, TOOLS } from "~lib/constants"
 import {
   addRecent,
   getCachedData,
@@ -35,10 +35,12 @@ function Popup() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTabState] = useState<"all" | "starred" | "recent">("all")
 
+  const demoMode = settings?.demoMode ?? false
+
   const setActiveTab = useCallback((tab: "all" | "starred" | "recent") => {
     setActiveTabState(tab)
-    chrome.storage.local.set({ activePopupTab: tab })
-  }, [])
+    if (!demoMode) chrome.storage.local.set({ activePopupTab: tab })
+  }, [demoMode])
 
   useEffect(() => {
     async function load() {
@@ -47,10 +49,17 @@ function Popup() {
         chrome.storage.local.get("activePopupTab")
       ])
       if (tabResult.activePopupTab) setActiveTabState(tabResult.activePopupTab)
-      setSettings(s)
-      setCache(c)
-      setRecents(r)
-      setExpandedProjects(s.expandedProjects)
+      if (s.demoMode) {
+        setSettings(s)
+        setCache(DEMO_DATA)
+        setRecents(DEMO_RECENTS)
+        setExpandedProjects(s.expandedProjects.length > 0 ? s.expandedProjects : [1001])
+      } else {
+        setSettings(s)
+        setCache(c)
+        setRecents(r)
+        setExpandedProjects(s.expandedProjects)
+      }
       setLoading(false)
     }
     load()
@@ -58,18 +67,32 @@ function Popup() {
 
   useEffect(() => {
     const listener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
-      if (changes.cachedData?.newValue) setCache(changes.cachedData.newValue)
-      if (changes.recents?.newValue) setRecents(changes.recents.newValue)
-      if (changes.settings?.newValue) setSettings(changes.settings.newValue)
+      if (changes.settings?.newValue) {
+        const newSettings = changes.settings.newValue as Settings
+        setSettings(newSettings)
+        if (newSettings.demoMode) {
+          setCache(DEMO_DATA)
+          setRecents(DEMO_RECENTS)
+          setExpandedProjects(newSettings.expandedProjects.length > 0 ? newSettings.expandedProjects : [1001])
+        }
+      }
+      if (changes.cachedData?.newValue && !demoMode) setCache(changes.cachedData.newValue)
+      if (changes.recents?.newValue && !demoMode) setRecents(changes.recents.newValue)
     }
     chrome.storage.onChanged.addListener(listener)
     return () => chrome.storage.onChanged.removeListener(listener)
-  }, [])
+  }, [demoMode])
 
   const handleOpenSettings = useCallback(() => { chrome.runtime.openOptionsPage() }, [])
 
   const handleToggleProject = useCallback(
     async (projectId: number) => {
+      if (demoMode) {
+        setExpandedProjects((prev) =>
+          prev.includes(projectId) ? prev.filter((id) => id !== projectId) : [...prev, projectId]
+        )
+        return
+      }
       const newExpanded = await toggleExpandedProject(projectId)
       setExpandedProjects(newExpanded)
       if (newExpanded.includes(projectId) && settings && cache) {
@@ -97,16 +120,17 @@ function Popup() {
         }
       }
     },
-    [settings, cache]
+    [settings, cache, demoMode]
   )
 
   const handleOpenLink = useCallback(
     async (e: React.MouseEvent, url: string, name: string, icon: string, projectName: string) => {
       e.preventDefault()
+      if (demoMode) return
       await addRecent({ name, url, icon, projectName, timestamp: Date.now() })
       chrome.tabs.create({ url })
     },
-    []
+    [demoMode]
   )
 
   const handleToggleStar = useCallback(
@@ -116,10 +140,14 @@ function Popup() {
       const idx = starred.findIndex((s) => s.type === item.type && s.projectId === item.projectId && s.itemId === item.itemId)
       if (idx !== -1) starred.splice(idx, 1)
       else starred.push(item)
+      if (demoMode) {
+        setSettings({ ...settings, starredItems: starred })
+        return
+      }
       const updated = await saveSettings({ starredItems: starred })
       setSettings(updated)
     },
-    [settings]
+    [settings, demoMode]
   )
 
   const isStarred = useCallback(
@@ -192,7 +220,7 @@ function Popup() {
 
   if (loading) return <div className="spinner">Loading...</div>
 
-  if (!settings?.apiKey) {
+  if (!settings?.apiKey && !demoMode) {
     return (
       <div className="empty-state">
         <h3>Welcome to PostHog Explorer</h3>

@@ -90,6 +90,7 @@ export interface Settings {
   hiddenProjects: number[] // project IDs to hide from popup
   flatList: boolean        // show projects as flat list without org grouping
   starredItems: StarredItem[]
+  demoMode: boolean
 }
 
 export interface ToolDefinition {
